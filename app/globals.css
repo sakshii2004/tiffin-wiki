@@ -1,0 +1,72 @@
+@import "tailwindcss";
+
+/**
+ * Brand design tokens (Standardized UI/UX Design System).
+ * Tailwind v4 reads these and generates utility classes:
+ *   text-brand-peridot, bg-brand-peridot, border-brand-peridot …
+ *   text-brand-maroon, bg-brand-maroon, border-brand-maroon …
+ *   bg-cream, text-cream …
+ *   text-body, bg-body, border-body …
+ *
+ * Palette (do not introduce new primary colors):
+ *   #fffdf7  Base background — warm off-white cream canvas
+ *   #111111  Primary text & dark elements
+ *   #6aa337  Primary accent / action — vibrant leafy green
+ *   #6e2020  Secondary accent / highlight — deep muted red
+ */
+@theme {
+  --color-brand-peridot: #6aa337; /* primary accent / action */
+  --color-brand-maroon: #6e2020; /* secondary accent / highlight */
+  --color-cream: #fffdf7; /* base background canvas */
+  --color-body: #111111; /* primary text & dark elements */
+
+  /* Soft, floating drop shadows for cards/containers. */
+  --shadow-soft: 0 1px 2px rgba(17, 17, 17, 0.04), 0 8px 24px rgba(17, 17, 17, 0.06);
+  --shadow-soft-lg: 0 2px 4px rgba(17, 17, 17, 0.05), 0 12px 32px rgba(17, 17, 17, 0.1);
+}
+
+:root {
+  --background: #fffdf7;
+  --foreground: #111111;
+}
+
+html {
+  /* Geometric, clean, professional sans-serif. Never cursive/handwritten. */
+  font-family: var(--font-inter), Inter, "Poppins", -apple-system, BlinkMacSystemFont,
+    "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  line-height: 1.6; /* high legibility against the off-white background */
+}
+
+/* Bold, heavily weighted headings for clear hierarchy. */
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+/* ── Accessibility: skip-to-content link ─────────────────────────────────── */
+.skip-link {
+  position: absolute;
+  top: -100%;
+  left: 0;
+  z-index: 9999;
+  padding: 0.5rem 1rem;
+  background-color: #111111;
+  color: #6aa337;
+  font-weight: 600;
+  text-decoration: none;
+  border-bottom-right-radius: 0.25rem;
+}
+
+.skip-link:focus {
+  top: 0;
+}

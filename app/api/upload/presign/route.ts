@@ -1,0 +1,31 @@
+import { NextRequest, NextResponse } from 'next/server';
+import { randomUUID } from 'crypto';
+import { extname } from 'path';
+import { PresignSchema } from '@/lib/validations';
+import { generatePresignedPutUrl, getPublicUrl } from '@/lib/r2';
+
+export async function POST(req: NextRequest) {
+  const body = await req.json();
+
+  // Validate input — contentType must be image/* (enforced by PresignSchema regex)
+  const parsed = PresignSchema.safeParse(body);
+  if (!parsed.success) {
+    return NextResponse.json({ error: parsed.error.flatten().fieldErrors }, { status: 400 });
+  }
+
+  const { filename, contentType, context } = parsed.data;
+  // The original filename is used ONLY to extract the file extension. The stored
+  // key uses only the UUID + extension for privacy (no user-supplied filename is
+  // ever persisted or exposed) and to guarantee collision-free keys.
+  const ext = extname(filename).toLowerCase() || '.jpg';
+  const uuid = randomUUID();
+
+  // Key format: {context}s/{uuid}{ext} (Section 9)
+  // e.g. listings/abc123.jpg or reviews/def456.png
+  const key = `${context}s/${uuid}${ext}`;
+
+  const presignedUrl = await generatePresignedPutUrl(key, contentType);
+  const publicUrl = getPublicUrl(key);
+
+  return NextResponse.json({ presignedUrl, key, publicUrl }, { status: 200 });
+}

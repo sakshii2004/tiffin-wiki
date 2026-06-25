@@ -1,0 +1,51 @@
+{
+  "site": {
+    "name": "tiffin.wiki",
+    "tagline": "Find your next tiffin.",
+    "description": "A community directory of home-style meal services."
+  },
+  "nav": {
+    "addTiffin": "Add a Tiffin",
+    "about": "About",
+    "addListing": "Add listing",
+    "privacy": "Privacy",
+    "skipToMain": "Skip to main content"
+  },
+  "search": {
+    "placeholder": "Service name, area...",
+    "cityLabel": "City",
+    "searchLabel": "Search",
+    "submitLabel": "Find Tiffin",
+    "resultsCount": "Showing {from}–{to} of {total} results in {city}",
+    "emptyState": "No tiffin services found in {city}. Be the first to add one!"
+  },
+  "listing": {
+    "showNumber": "Show WhatsApp Number",
+    "openWhatsApp": "Open in WhatsApp",
+    "writeReview": "Write a Review",
+    "reviews": "Reviews",
+    "noReviews": "No reviews yet. Be the first to review!"
+  },
+  "addListing": {
+    "title": "Add a tiffin service",
+    "subtitle": "Know a great tiffin service? List it for free. Our team reviews every submission.",
+    "step1": "Basic Info",
+    "step2": "Service Details",
+    "step3": "Delivery & Images",
+    "rateLimitError": "You've submitted 5 listings today. Try again tomorrow.",
+    "noteToReviewer": "This is only seen by our team"
+  },
+  "submitted": {
+    "headline": "Thank you! Your submission is under review.",
+    "body": "We manually verify each listing to keep the directory reliable. Once verified, it will appear on tiffin.wiki. This usually takes 1–3 business days.",
+    "addAnother": "Add another tiffin service",
+    "backHome": "Back to home"
+  },
+  "errors": {
+    "notFound": "Page not found",
+    "notFoundBody": "We couldn't find what you were looking for.",
+    "genericError": "Something went wrong",
+    "genericBody": "We encountered an unexpected error. Please try again.",
+    "backHome": "Go back home"
+  }
+}
