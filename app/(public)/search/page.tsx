@@ -32,13 +32,17 @@ function titleCase(value: string): string {
 }
 
 export async function generateMetadata({ searchParams }: SearchPageProps): Promise<Metadata> {
-  const { city = '' } = await searchParams;
-  const cityDisplay = city ? titleCase(city) : 'India';
+  const { city = '', q = '' } = await searchParams;
+  const display = city ? titleCase(city) : (q ? `"${q}"` : 'India');
+  const alternatesUrl = new URLSearchParams();
+  if (city) alternatesUrl.set('city', city);
+  if (q) alternatesUrl.set('q', q);
+  const qs = alternatesUrl.toString();
   return {
-    title: `Tiffin services in ${cityDisplay} — tiffin.wiki`,
-    description: `Browse verified tiffin meal services in ${cityDisplay}. Community-listed, manually verified.`,
+    title: `Tiffin services in ${display} — tiffin.wiki`,
+    description: `Browse verified tiffin meal services in ${display}. Community-listed, manually verified.`,
     robots: { index: true, follow: true },
-    alternates: { canonical: `https://tiffin.wiki/search?city=${city}` },
+    alternates: { canonical: `https://tiffin.wiki/search${qs ? '?' + qs : ''}` },
   };
 }
 
@@ -51,8 +55,8 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
     : undefined;
   const vegOnly = params.veg === 'true';
 
-  // No city → render the search form (in the header) pre-focused, no results.
-  if (!city) {
+  // If neither city nor query is provided, render the search form.
+  if (!city && !q) {
     return (
       <>
         <SiteHeader showSearchBar />
@@ -60,7 +64,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
           <div className="container mx-auto px-4 py-24 text-center">
             <h1 className="text-2xl font-bold text-body">Search tiffin services</h1>
             <p className="mt-3 text-gray-600">
-              Pick a city above to browse verified tiffin services near you.
+              Pick a city or type a location to browse verified tiffin services near you.
             </p>
           </div>
         </main>
@@ -74,12 +78,13 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
 
   const where: Prisma.TiffinServiceWhereInput = {
     status: 'APPROVED',
-    city,
+    ...(city ? { city } : {}),
     ...(q
       ? {
           OR: [
-            { name: { contains: q, mode: 'insensitive' } },
+            { city: { contains: q, mode: 'insensitive' } },
             { area: { contains: q, mode: 'insensitive' } },
+            { name: { contains: q, mode: 'insensitive' } },
             { description: { contains: q, mode: 'insensitive' } },
           ],
         }
@@ -102,7 +107,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
     prisma.tiffinService.count({ where }),
   ]);
 
-  const cityDisplay = titleCase(city);
+  const cityDisplay = city ? titleCase(city) : (q ? `"${q}"` : 'all locations');
   const totalPages = Math.ceil(total / PAGE_SIZE);
   const from = total === 0 ? 0 : skip + 1;
   const to = skip + listings.length;
@@ -110,7 +115,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
 
   // Pagination base: every active param EXCEPT page.
   const baseParams = new URLSearchParams();
-  baseParams.set('city', city);
+  if (city) baseParams.set('city', city);
   if (q) baseParams.set('q', q);
   if (meal) baseParams.set('meal', meal);
   if (vegOnly) baseParams.set('veg', 'true');
@@ -133,12 +138,12 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
-      <SiteHeader showSearchBar defaultCity={city} defaultQ={q || undefined} />
+      <SiteHeader showSearchBar defaultCity={city || undefined} defaultQ={q || undefined} />
       <main id="main-content" className="flex-1">
         <div className="container mx-auto flex flex-col gap-6 px-4 py-8">
           {/* Filter bar */}
           <FilterBar
-            currentCity={city}
+            currentCity={city || undefined}
             currentMeal={meal}
             currentVeg={vegOnly}
             currentQ={q || undefined}
@@ -163,8 +168,8 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
               <ListingGrid listings={cards} />
               <Pagination
                 currentPage={page}
-                totalPages={totalPages}
                 baseUrl={baseParams.toString()}
+                totalPages={totalPages}
               />
             </>
           )}

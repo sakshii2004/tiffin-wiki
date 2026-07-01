@@ -3,7 +3,7 @@
 import { useRouter } from 'next/navigation';
 
 interface FilterBarProps {
-  currentCity: string;
+  currentCity?: string;
   currentMeal?: string;
   currentVeg?: boolean;
   currentQ?: string;
@@ -47,22 +47,26 @@ export function FilterBar({ currentCity, currentMeal, currentVeg, currentQ }: Fi
     );
   }
 
-  const cityDisplay = currentCity.charAt(0).toUpperCase() + currentCity.slice(1);
+  const cityDisplay = currentCity ? currentCity.charAt(0).toUpperCase() + currentCity.slice(1) : '';
 
   return (
     <div className="flex flex-nowrap items-center gap-2 overflow-x-auto pb-1">
       {/* Active city chip (dismissible) */}
-      <button
-        type="button"
-        onClick={() => navigate({ city: undefined })}
-        className="inline-flex min-h-[44px] shrink-0 items-center gap-1.5 rounded-full bg-brand-peridot/20 px-3 text-sm font-medium text-body hover:bg-brand-peridot/30"
-        aria-label={`Remove city filter ${cityDisplay}`}
-      >
-        {cityDisplay}
-        <span aria-hidden="true">×</span>
-      </button>
+      {currentCity && (
+        <>
+          <button
+            type="button"
+            onClick={() => navigate({ city: undefined })}
+            className="inline-flex min-h-[44px] shrink-0 items-center gap-1.5 rounded-full bg-brand-peridot/20 px-3 text-sm font-medium text-body hover:bg-brand-peridot/30"
+            aria-label={`Remove city filter ${cityDisplay}`}
+          >
+            {cityDisplay}
+            <span aria-hidden="true">×</span>
+          </button>
 
-      <span aria-hidden="true" className="h-6 w-px shrink-0 bg-gray-200" />
+          <span aria-hidden="true" className="h-6 w-px shrink-0 bg-gray-200" />
+        </>
+      )}
 
       {/* Meal toggles */}
       {MEALS.map(({ value, label }) => {

@@ -7,6 +7,7 @@ interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
   name: string;
   error?: string;
   hint?: string;
+  icon?: React.ReactNode;
 }
 
 /**
@@ -15,7 +16,7 @@ interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
  * - Errors rendered in <p role="alert"> and linked via aria-describedby.
  * - Error ID pattern: `${name}-error`; hint ID pattern: `${name}-hint`.
  */
-export function Input({ label, name, error, hint, id, className = '', ...rest }: InputProps) {
+export function Input({ label, name, error, hint, id, className = '', icon, ...rest }: InputProps) {
   const inputId = id ?? name;
   const errorId = `${name}-error`;
   const hintId = `${name}-hint`;
@@ -25,17 +26,30 @@ export function Input({ label, name, error, hint, id, className = '', ...rest }:
 
   return (
     <div className="flex flex-col gap-1">
-      <label htmlFor={inputId} className="text-sm font-medium text-body">
+      <label htmlFor={inputId} className="text-sm font-semibold text-slate-700 mb-1">
         {label}
       </label>
-      <input
-        id={inputId}
-        name={name}
-        aria-invalid={error ? true : undefined}
-        aria-describedby={describedBy}
-        className={cn(FIELD_BASE, 'border-gray-300', error && 'border-red-500', className)}
-        {...rest}
-      />
+      <div className="relative flex items-center w-full">
+        {icon && (
+          <span className="absolute left-3.5 text-slate-400 pointer-events-none z-10">
+            {icon}
+          </span>
+        )}
+        <input
+          id={inputId}
+          name={name}
+          aria-invalid={error ? true : undefined}
+          aria-describedby={describedBy}
+          className={cn(
+            FIELD_BASE, 
+            'border-slate-200 w-full', 
+            icon ? 'pl-10' : 'pl-3', 
+            error && 'border-red-500', 
+            className
+          )}
+          {...rest}
+        />
+      </div>
       {error && (
         <p id={errorId} role="alert" className="text-sm text-red-600">
           {error}

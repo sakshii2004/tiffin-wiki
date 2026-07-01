@@ -1,80 +1,52 @@
 'use client';
 
+import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { useState, type FormEvent } from 'react';
-import { cn } from '@/lib/cn';
-import { FIELD_BASE, FOCUS_RING_OFFSET } from '@/components/ui/styles';
-import { Select } from '@/components/ui/Select';
-
-const CITIES = [
-  { label: 'Mumbai', value: 'mumbai' },
-  { label: 'Delhi', value: 'delhi' },
-  { label: 'Bangalore', value: 'bangalore' },
-  { label: 'Hyderabad', value: 'hyderabad' },
-  { label: 'Pune', value: 'pune' },
-  { label: 'Chennai', value: 'chennai' },
-  { label: 'Ahmedabad', value: 'ahmedabad' },
-  { label: 'Kolkata', value: 'kolkata' },
-  { label: 'Other', value: 'other' },
-] as const;
+import { useToast } from '@/components/providers/ToastProvider';
+import { Search, MapPin } from 'lucide-react';
 
 interface SearchBarProps {
   defaultCity?: string;
   defaultQ?: string;
 }
 
-export function SearchBar({ defaultCity = 'mumbai', defaultQ = '' }: SearchBarProps) {
+export function SearchBar({ defaultCity = '', defaultQ = '' }: SearchBarProps) {
   const router = useRouter();
-  const [city, setCity] = useState(defaultCity);
-  const [q, setQ] = useState(defaultQ);
+  const { showToast } = useToast();
+  const [searchQuery, setSearchQuery] = useState<string>(defaultQ || defaultCity || '');
 
-  function handleSubmit(event: FormEvent<HTMLFormElement>) {
+  function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    const params = new URLSearchParams();
-    if (city) params.set('city', city);
-    const trimmed = q.trim();
-    if (trimmed) params.set('q', trimmed);
-    router.push(`/search?${params.toString()}`);
+    const trimmed = searchQuery.trim();
+    if (!trimmed) {
+      showToast('Please type a location to search.', 'error');
+      return;
+    }
+    router.push(`/search?q=${encodeURIComponent(trimmed)}`);
   }
 
   return (
-    <form
-      onSubmit={handleSubmit}
-      className="flex w-full flex-col gap-2 sm:flex-row sm:items-end"
-      role="search"
+    <form 
+      onSubmit={handleSubmit} 
+      className="w-full bg-white rounded-full shadow-[0_2px_8px_rgba(0,0,0,0.05)] border border-[#e2e8f0] flex items-center p-1 pl-3.5 gap-2 transition-all duration-300 ease-out focus-within:scale-[1.015] focus-within:shadow-[0_4px_16px_rgba(0,0,0,0.08)] focus-within:border-[#cbd5e1]"
     >
-      <Select
-        id="search-city"
-        label="City"
-        name="city"
-        options={CITIES}
-        value={city}
-        onChange={(e) => setCity(e.target.value)}
+      <span className="text-[#94a3b8] shrink-0">
+        <MapPin size={18} />
+      </span>
+      <input
+        type="text"
+        placeholder="Search area or city..."
+        className="flex-1 border-none outline-none text-sm text-[#0f172a] bg-transparent placeholder-[#94a3b8] focus:ring-0 p-0"
+        value={searchQuery}
+        onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearchQuery(e.target.value)}
       />
-
-      <div className="flex flex-1 flex-col gap-1">
-        <label htmlFor="search-q" className="text-sm font-medium text-body">
-          Search
-        </label>
-        <input
-          id="search-q"
-          name="q"
-          type="text"
-          value={q}
-          onChange={(e) => setQ(e.target.value)}
-          placeholder="Service name, area..."
-          className={cn(FIELD_BASE, 'border-gray-300')}
-        />
-      </div>
-
+      <div className="w-px h-6 bg-[#e2e8f0] mx-0.5 shrink-0" />
       <button
         type="submit"
-        className={cn(
-          'inline-flex min-h-[44px] min-w-[44px] items-center justify-center rounded-full bg-brand-peridot px-6 py-2 text-sm font-semibold text-white shadow-[var(--shadow-soft)] transition-all hover:opacity-90 hover:shadow-[var(--shadow-soft-lg)]',
-          FOCUS_RING_OFFSET,
-        )}
+        className="bg-[#0f172a] text-white hover:bg-slate-800 transition-colors border-none rounded-full px-4 py-1.5 font-medium text-xs md:text-sm flex items-center gap-1.5 cursor-pointer shrink-0 focus:outline-none focus:ring-2 focus:ring-[#b85c38] focus:ring-offset-2"
       >
-        Find Tiffin
+        <Search size={14} />
+        <span>Find Tiffins</span>
       </button>
     </form>
   );

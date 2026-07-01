@@ -1,5 +1,7 @@
-import Link from "next/link";
-import { SearchBar } from "@/components/layout/SearchBar";
+import Link from 'next/link';
+import Image from 'next/image';
+import { Plus } from 'lucide-react';
+import { SearchBar } from '@/components/layout/SearchBar';
 
 interface SiteHeaderProps {
   /** When true, renders the inline <SearchBar> (used on search & detail pages). */
@@ -18,42 +20,66 @@ interface SiteHeaderProps {
  */
 export function SiteHeader({ showSearchBar = false, defaultCity, defaultQ }: SiteHeaderProps) {
   return (
-    <header className="sticky top-0 z-50 px-4 pt-4">
-      <div className="container mx-auto flex flex-col gap-3 rounded-full border border-black/5 bg-white/90 px-4 py-3 shadow-[var(--shadow-soft-lg)] backdrop-blur-md md:flex-row md:items-center md:justify-between md:gap-6 md:py-2 md:pl-6 md:pr-3">
-        {/* Logo / wordmark */}
-        <Link
-          href="/"
-          className="text-2xl font-bold text-brand-peridot hover:opacity-90 transition-opacity"
-          aria-label="Tiffin Wiki — home"
-        >
-          Tiffin Wiki
-        </Link>
+    <header className="sticky top-0 z-50 w-full px-4 sm:px-6 lg:px-8 pt-4 md:pt-6 bg-transparent pointer-events-none">
+      <div className="mx-auto max-w-[1152px] w-full bg-white/95 backdrop-blur-[10px] rounded-[28px] md:rounded-full border border-slate-200/50 shadow-[0_0_15px_rgba(0,0,0,0.05)] px-6 py-2 md:py-2.5 flex flex-col md:flex-row md:items-center justify-between min-h-[56px] pointer-events-auto">
+        <div className="flex items-center justify-between w-full md:w-auto h-10 md:h-11">
+          {/* Logo / wordmark */}
+          <Link
+            href="/"
+            className="flex items-center cursor-pointer focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#b85c38]"
+            aria-label="Tiffin Wiki — home"
+          >
+            <Image
+              src="/tiffin-wiki-logo.png"
+              alt="Tiffin Wiki Logo"
+              width={160}
+              height={40}
+              priority
+              className="h-8 md:h-9 w-auto object-contain"
+            />
+          </Link>
 
-        {/* Optional inline search — centred on desktop, stacked on mobile */}
+          {/* On Mobile: Action buttons shown on the right side of the header */}
+          <div className="flex items-center gap-4 md:hidden">
+            <Link
+              href="/api/auth/signin"
+              className="text-[#64748b] font-medium text-[15px] hover:text-[#1e293b] transition-colors"
+            >
+              Log in
+            </Link>
+            <Link
+              href="/add"
+              className="bg-[#b85c38] text-white rounded-full px-4 py-2 font-medium text-[14px] flex items-center gap-1.5 hover:opacity-90 transition-all focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#b85c38]"
+            >
+              <Plus size={18} />
+              <span className="sr-only sm:not-sr-only">Add a Tiffin</span>
+            </Link>
+          </div>
+        </div>
+
+        {/* Optional inline search — centered on desktop, stacked on mobile */}
         {showSearchBar && (
-          <div className="w-full md:max-w-xl md:flex-1">
+          <div className="w-full md:max-w-md md:flex-1 md:mx-6 pb-2 md:pb-0">
             <SearchBar defaultCity={defaultCity} defaultQ={defaultQ} />
           </div>
         )}
 
-        {/* Primary action */}
-        <nav aria-label="Primary navigation">
+        {/* On Desktop: Action buttons */}
+        <div className="hidden md:flex items-center gap-4">
+          <Link
+            href="/api/auth/signin"
+            className="text-[#64748b] font-medium text-[15px] hover:text-[#1e293b] transition-colors"
+          >
+            Log in
+          </Link>
           <Link
             href="/add"
-            className="
-              inline-flex items-center justify-center
-              min-h-[44px] min-w-[44px]
-              rounded-full px-5 py-2
-              bg-brand-peridot text-white
-              text-sm font-semibold
-              shadow-[var(--shadow-soft)]
-              hover:opacity-90 hover:shadow-[var(--shadow-soft-lg)] transition-all
-              focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-peridot
-            "
+            className="bg-[#b85c38] text-white rounded-full px-[18px] py-2 font-medium text-[14px] flex items-center gap-1.5 hover:opacity-90 transition-all focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#b85c38]"
           >
-            Add a Tiffin
+            <Plus size={18} />
+            <span>Add a Tiffin</span>
           </Link>
-        </nav>
+        </div>
       </div>
     </header>
   );

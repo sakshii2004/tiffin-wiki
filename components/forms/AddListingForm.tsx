@@ -13,6 +13,7 @@ import { Button } from '@/components/ui/Button';
 import { TagInput } from '@/components/forms/TagInput';
 import { ImageUploader } from '@/components/forms/ImageUploader';
 import { StepWizard } from '@/components/forms/StepWizard';
+import { Store, MapPin, Phone, IndianRupee } from 'lucide-react';
 
 // The form carries the honeypot field in addition to the validated client schema.
 // The Zod resolver validates ONLY AddListingClientSchema (honeypot excluded), so
@@ -84,7 +85,7 @@ const stepFields: Record<Step, (keyof AddListingClientInput)[]> = {
 };
 
 const checkboxClass =
-  'inline-flex items-center gap-2 rounded-md border border-gray-300 px-3 py-2 text-sm text-body cursor-pointer hover:bg-gray-50 has-[:checked]:border-brand-peridot has-[:checked]:bg-brand-peridot/10';
+  'inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm text-slate-700 font-medium cursor-pointer transition-all hover:bg-slate-50/50 hover:border-slate-300 has-[:checked]:border-[#6aa337] has-[:checked]:bg-[#eef5e6] has-[:checked]:text-[#2d5c10]';
 
 export function AddListingForm() {
   const router = useRouter();
@@ -216,6 +217,7 @@ export function AddListingForm() {
             render={({ field: { ref, ...field }, fieldState }) => (
               <Input
                 label="Service name"
+                icon={<Store size={18} />}
                 {...field}
                 value={field.value ?? ''}
                 maxLength={120}
@@ -226,23 +228,28 @@ export function AddListingForm() {
           />
 
           <div className="flex flex-col gap-1">
-            <label htmlFor="city" className="text-sm font-medium text-body">
+            <label htmlFor="city" className="text-sm font-semibold text-slate-700 mb-1">
               City
             </label>
-            <select
-              id="city"
-              {...register('city')}
-              aria-invalid={errors.city ? true : undefined}
-              aria-describedby={errors.city ? 'city-error' : undefined}
-              className={cn(FIELD_BASE, errors.city ? 'border-red-500' : 'border-gray-300')}
-            >
-              <option value="">Select a city…</option>
-              {CITIES.map((c) => (
-                <option key={c.value} value={c.value}>
-                  {c.label}
-                </option>
-              ))}
-            </select>
+            <div className="relative flex items-center w-full">
+              <span className="absolute left-3.5 text-slate-400 pointer-events-none z-10">
+                <MapPin size={18} />
+              </span>
+              <select
+                id="city"
+                {...register('city')}
+                aria-invalid={errors.city ? true : undefined}
+                aria-describedby={errors.city ? 'city-error' : undefined}
+                className={cn(FIELD_BASE, 'w-full pl-10', errors.city ? 'border-red-500' : 'border-slate-200')}
+              >
+                <option value="">Select a city…</option>
+                {CITIES.map((c) => (
+                  <option key={c.value} value={c.value}>
+                    {c.label}
+                  </option>
+                ))}
+              </select>
+            </div>
             {errors.city && (
               <p id="city-error" role="alert" className="text-sm text-red-600">
                 {errors.city.message}
@@ -256,6 +263,7 @@ export function AddListingForm() {
             render={({ field: { ref, ...field }, fieldState }) => (
               <Input
                 label="Area / Neighbourhood (optional)"
+                icon={<MapPin size={18} />}
                 {...field}
                 value={field.value ?? ''}
                 maxLength={80}
@@ -271,6 +279,7 @@ export function AddListingForm() {
               <Input
                 label="WhatsApp number"
                 type="tel"
+                icon={<Phone size={18} />}
                 {...field}
                 value={field.value ?? ''}
                 // Strip spaces, dashes and parentheses so user-friendly input like
@@ -284,7 +293,7 @@ export function AddListingForm() {
           />
 
           <fieldset className="flex flex-col gap-2 border-0 p-0">
-            <legend className="text-sm font-medium text-body">Pure vegetarian?</legend>
+            <legend className="text-sm font-semibold text-slate-700 mb-1.5">Pure vegetarian?</legend>
             <div className="flex flex-wrap gap-2">
               {[
                 { label: 'Yes — pure veg', value: 'veg' },
@@ -298,6 +307,7 @@ export function AddListingForm() {
                     value={opt.value}
                     checked={vegChoice === opt.value}
                     onChange={() => setVegChoice(opt.value as 'veg' | 'mixed' | 'nonveg')}
+                    className="h-4 w-4 border-slate-300 text-[#6aa337] focus:ring-[#6aa337] focus:ring-offset-0"
                   />
                   {opt.label}
                 </label>
@@ -311,11 +321,16 @@ export function AddListingForm() {
       {step === 2 && (
         <div className="flex flex-col gap-5">
           <fieldset className="flex flex-col gap-2 border-0 p-0">
-            <legend className="text-sm font-medium text-body">Meals offered</legend>
+            <legend className="text-sm font-semibold text-slate-700 mb-1.5">Meals offered</legend>
             <div className="flex flex-wrap gap-2">
               {MEALS.map((m) => (
                 <label key={m.value} className={checkboxClass}>
-                  <input type="checkbox" value={m.value} {...register('mealsOffered')} />
+                  <input 
+                    type="checkbox" 
+                    value={m.value} 
+                    {...register('mealsOffered')} 
+                    className="h-4 w-4 rounded border-slate-300 text-[#6aa337] focus:ring-[#6aa337] focus:ring-offset-0"
+                  />
                   {m.label}
                 </label>
               ))}
@@ -328,11 +343,16 @@ export function AddListingForm() {
           </fieldset>
 
           <fieldset className="flex flex-col gap-2 border-0 p-0">
-            <legend className="text-sm font-medium text-body">Meal sizes</legend>
+            <legend className="text-sm font-semibold text-slate-700 mb-1.5">Meal sizes</legend>
             <div className="flex flex-wrap gap-2">
               {MEAL_SIZES.map((s) => (
                 <label key={s.value} className={checkboxClass}>
-                  <input type="checkbox" value={s.value} {...register('mealSizes')} />
+                  <input 
+                    type="checkbox" 
+                    value={s.value} 
+                    {...register('mealSizes')} 
+                    className="h-4 w-4 rounded border-slate-300 text-[#6aa337] focus:ring-[#6aa337] focus:ring-offset-0"
+                  />
                   {s.label}
                 </label>
               ))}
@@ -340,11 +360,16 @@ export function AddListingForm() {
           </fieldset>
 
           <fieldset className="flex flex-col gap-2 border-0 p-0">
-            <legend className="text-sm font-medium text-body">What each meal includes</legend>
+            <legend className="text-sm font-semibold text-slate-700 mb-1.5">What each meal includes</legend>
             <div className="flex flex-wrap gap-2">
               {MEAL_COMPONENTS.map((c) => (
                 <label key={c.value} className={checkboxClass}>
-                  <input type="checkbox" value={c.value} {...register('mealComponents')} />
+                  <input 
+                    type="checkbox" 
+                    value={c.value} 
+                    {...register('mealComponents')} 
+                    className="h-4 w-4 rounded border-slate-300 text-[#6aa337] focus:ring-[#6aa337] focus:ring-offset-0"
+                  />
                   {c.label}
                 </label>
               ))}
@@ -356,7 +381,7 @@ export function AddListingForm() {
             control={control}
             render={({ field }) => (
               <fieldset className="flex flex-col gap-2 border-0 p-0">
-                <legend className="text-sm font-medium text-body">Spice level</legend>
+                <legend className="text-sm font-semibold text-slate-700 mb-1.5">Spice level</legend>
                 <div className="flex flex-wrap gap-2">
                   {[
                     { label: 'Mild', value: 'MILD' },
@@ -371,6 +396,7 @@ export function AddListingForm() {
                         value={opt.value}
                         checked={(field.value ?? '') === opt.value}
                         onChange={() => field.onChange(opt.value === '' ? undefined : opt.value)}
+                        className="h-4 w-4 border-slate-300 text-[#6aa337] focus:ring-[#6aa337] focus:ring-offset-0"
                       />
                       {opt.label}
                     </label>
@@ -385,7 +411,7 @@ export function AddListingForm() {
             control={control}
             render={({ field }) => (
               <fieldset className="flex flex-col gap-2 border-0 p-0">
-                <legend className="text-sm font-medium text-body">Container type</legend>
+                <legend className="text-sm font-semibold text-slate-700 mb-1.5">Container type</legend>
                 <div className="flex flex-wrap gap-2">
                   {[
                     { label: 'Steel tiffin', value: 'STEEL' },
@@ -404,6 +430,7 @@ export function AddListingForm() {
                           // Tiffin-wash only applies to steel containers.
                           if (next !== 'STEEL') setValue('requiresTiffinWash', undefined);
                         }}
+                        className="h-4 w-4 border-slate-300 text-[#6aa337] focus:ring-[#6aa337] focus:ring-offset-0"
                       />
                       {opt.label}
                     </label>
@@ -419,7 +446,7 @@ export function AddListingForm() {
               control={control}
               render={({ field }) => (
                 <fieldset className="flex flex-col gap-2 border-0 p-0">
-                  <legend className="text-sm font-medium text-body">Tiffin wash required?</legend>
+                  <legend className="text-sm font-semibold text-slate-700 mb-1.5">Tiffin wash required?</legend>
                   <div className="flex flex-wrap gap-2">
                     {[
                       { label: 'Yes', value: 'yes' },
@@ -434,6 +461,7 @@ export function AddListingForm() {
                             field.value === undefined ? false : field.value === (opt.value === 'yes')
                           }
                           onChange={() => field.onChange(opt.value === 'yes')}
+                          className="h-4 w-4 border-slate-300 text-[#6aa337] focus:ring-[#6aa337] focus:ring-offset-0"
                         />
                         {opt.label}
                       </label>
@@ -445,11 +473,16 @@ export function AddListingForm() {
           )}
 
           <fieldset className="flex flex-col gap-2 border-0 p-0">
-            <legend className="text-sm font-medium text-body">Operational days</legend>
+            <legend className="text-sm font-semibold text-slate-700 mb-1.5">Operational days</legend>
             <div className="flex flex-wrap gap-2">
               {OPERATIONAL_DAYS.map((d) => (
                 <label key={d.value} className={checkboxClass}>
-                  <input type="checkbox" value={d.value} {...register('operationalDays')} />
+                  <input 
+                    type="checkbox" 
+                    value={d.value} 
+                    {...register('operationalDays')} 
+                    className="h-4 w-4 rounded border-slate-300 text-[#6aa337] focus:ring-[#6aa337] focus:ring-offset-0"
+                  />
                   {d.label}
                 </label>
               ))}
@@ -457,45 +490,45 @@ export function AddListingForm() {
           </fieldset>
 
           <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
-            <div className="flex flex-col gap-1">
-              <label htmlFor="pricePerMeal" className="text-sm font-medium text-body">
-                Price per meal (₹, optional)
-              </label>
-              <input
-                id="pricePerMeal"
-                type="number"
-                min={1}
-                {...register('pricePerMeal', {
-                  setValueAs: (v) => (v === '' || v == null ? undefined : Number(v)),
-                })}
-                className={cn(FIELD_BASE, errors.pricePerMeal ? 'border-red-500' : 'border-gray-300')}
-              />
-              {errors.pricePerMeal && (
-                <p role="alert" className="text-sm text-red-600">
-                  {errors.pricePerMeal.message}
-                </p>
+            <Controller
+              name="pricePerMeal"
+              control={control}
+              render={({ field, fieldState }) => (
+                <Input
+                  label="Price per meal (₹, optional)"
+                  type="number"
+                  min={1}
+                  icon={<IndianRupee size={18} />}
+                  {...field}
+                  value={field.value ?? ''}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    field.onChange(val === '' ? undefined : Number(val));
+                  }}
+                  error={fieldState.error?.message}
+                />
               )}
-            </div>
+            />
 
-            <div className="flex flex-col gap-1">
-              <label htmlFor="pricePerMonth" className="text-sm font-medium text-body">
-                Price per month (₹, optional)
-              </label>
-              <input
-                id="pricePerMonth"
-                type="number"
-                min={1}
-                {...register('pricePerMonth', {
-                  setValueAs: (v) => (v === '' || v == null ? undefined : Number(v)),
-                })}
-                className={cn(FIELD_BASE, errors.pricePerMonth ? 'border-red-500' : 'border-gray-300')}
-              />
-              {errors.pricePerMonth && (
-                <p role="alert" className="text-sm text-red-600">
-                  {errors.pricePerMonth.message}
-                </p>
+            <Controller
+              name="pricePerMonth"
+              control={control}
+              render={({ field, fieldState }) => (
+                <Input
+                  label="Price per month (₹, optional)"
+                  type="number"
+                  min={1}
+                  icon={<IndianRupee size={18} />}
+                  {...field}
+                  value={field.value ?? ''}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    field.onChange(val === '' ? undefined : Number(val));
+                  }}
+                  error={fieldState.error?.message}
+                />
               )}
-            </div>
+            />
           </div>
         </div>
       )}
@@ -568,7 +601,7 @@ export function AddListingForm() {
       )}
 
       {submitError && (
-        <p role="alert" className="rounded-md bg-red-50 px-4 py-3 text-sm text-red-700">
+        <p role="alert" className="rounded-xl bg-red-50 border border-red-200/50 px-4 py-3 text-sm text-red-700 shadow-sm">
           {submitError}
         </p>
       )}

@@ -10,8 +10,8 @@ export function StepWizard({ currentStep, totalSteps, stepTitles }: StepWizardPr
 
   return (
     <div className="flex flex-col gap-2">
-      <p className="text-sm font-medium text-body" aria-current="step">
-        Step {currentStep} of {totalSteps}: {title}
+      <p className="text-sm font-medium text-slate-500" aria-current="step">
+        Step <span className="text-[#6aa337] font-bold">{currentStep}</span> of {totalSteps}: <span className="text-slate-800 font-semibold">{title}</span>
       </p>
       <div
         role="progressbar"
@@ -19,10 +19,10 @@ export function StepWizard({ currentStep, totalSteps, stepTitles }: StepWizardPr
         aria-valuemin={1}
         aria-valuemax={totalSteps}
         aria-label={`Step ${currentStep} of ${totalSteps}`}
-        className="h-2 w-full overflow-hidden rounded-full bg-gray-200"
+        className="h-2 w-full overflow-hidden rounded-full bg-slate-100 border border-slate-200/20"
       >
         <div
-          className="h-full bg-brand-peridot transition-all"
+          className="h-full bg-[#6aa337] transition-all duration-300 ease-out"
           style={{ width: `${percent}%` }}
         />
       </div>

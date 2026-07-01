@@ -40,7 +40,7 @@ export function Textarea({
 
   return (
     <div className="flex flex-col gap-1">
-      <label htmlFor={textareaId} className="text-sm font-medium text-body">
+      <label htmlFor={textareaId} className="text-sm font-semibold text-slate-700 mb-1">
         {label}
       </label>
       <textarea
@@ -51,7 +51,7 @@ export function Textarea({
         value={value}
         aria-invalid={error ? true : undefined}
         aria-describedby={describedBy}
-        className={cn(TEXTAREA_BASE, 'border-gray-300', error && 'border-red-500', className)}
+        className={cn(TEXTAREA_BASE, 'border-slate-200', error && 'border-red-500', className)}
         {...rest}
       />
       <div className="flex items-start justify-between gap-2">

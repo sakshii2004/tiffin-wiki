@@ -7,10 +7,17 @@
  * active city / query, or the listing's city) that a shared layout cannot
  * access. Each public page therefore owns its own header/main/footer.
  */
+import { SharedDotGrid } from '@/components/layout/SharedDotGrid';
+
 export default function PublicLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  return <>{children}</>;
+  return (
+    <>
+      <SharedDotGrid />
+      {children}
+    </>
+  );
 }
