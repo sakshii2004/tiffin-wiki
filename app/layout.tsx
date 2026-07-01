@@ -25,8 +25,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`h-full ${inter.variable}`}>
-      <body className="min-h-full flex flex-col bg-cream text-body antialiased">
+    <html lang="en" className={inter.variable}>
+      <body className="min-h-screen flex flex-col bg-cream text-body antialiased">
         {/* Skip-to-content link for keyboard / screen-reader users */}
         <a href="#main-content" className="skip-link">
           Skip to main content

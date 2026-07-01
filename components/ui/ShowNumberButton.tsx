@@ -8,14 +8,22 @@ interface ShowNumberButtonProps {
 }
 
 function formatNumber(raw: string): string {
-  // Light formatting for readability; keeps the leading +.
-  return raw.trim();
+  const clean = raw.trim();
+  if (clean.length === 10) {
+    return `${clean.slice(0, 5)} ${clean.slice(5)}`;
+  }
+  if (clean.startsWith('+91') && clean.length === 13) {
+    const main = clean.slice(3);
+    return `${main.slice(0, 5)} ${main.slice(5)}`;
+  }
+  return clean;
 }
 
 function toWaLink(raw: string): string {
   // wa.me expects digits only (no +, spaces, or dashes).
   const digits = raw.replace(/[^\d]/g, '');
-  return `https://wa.me/${digits}`;
+  const prefix = digits.length === 10 ? '91' : '';
+  return `https://wa.me/${prefix}${digits}`;
 }
 
 /**

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useForm, Controller, type Resolver } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -25,13 +25,115 @@ type Step = 1 | 2 | 3;
 const CITIES = [
   { label: 'Mumbai', value: 'mumbai' },
   { label: 'Delhi', value: 'delhi' },
-  { label: 'Bangalore', value: 'bangalore' },
+  { label: 'Bengaluru', value: 'bengaluru' },
   { label: 'Hyderabad', value: 'hyderabad' },
-  { label: 'Pune', value: 'pune' },
-  { label: 'Chennai', value: 'chennai' },
   { label: 'Ahmedabad', value: 'ahmedabad' },
+  { label: 'Chennai', value: 'chennai' },
   { label: 'Kolkata', value: 'kolkata' },
-  { label: 'Other', value: 'other' },
+  { label: 'Pune', value: 'pune' },
+  { label: 'Jaipur', value: 'jaipur' },
+  { label: 'Surat', value: 'surat' },
+  { label: 'Lucknow', value: 'lucknow' },
+  { label: 'Kanpur', value: 'kanpur' },
+  { label: 'Nagpur', value: 'nagpur' },
+  { label: 'Indore', value: 'indore' },
+  { label: 'Thane', value: 'thane' },
+  { label: 'Bhopal', value: 'bhopal' },
+  { label: 'Visakhapatnam', value: 'visakhapatnam' },
+  { label: 'Pimpri-Chinchwad', value: 'pimpri-chinchwad' },
+  { label: 'Patna', value: 'patna' },
+  { label: 'Vadodara', value: 'vadodara' },
+  { label: 'Ghaziabad', value: 'ghaziabad' },
+  { label: 'Ludhiana', value: 'ludhiana' },
+  { label: 'Agra', value: 'agra' },
+  { label: 'Nashik', value: 'nashik' },
+  { label: 'Faridabad', value: 'faridabad' },
+  { label: 'Meerut', value: 'meerut' },
+  { label: 'Rajkot', value: 'rajkot' },
+  { label: 'Kalyan-Dombivli', value: 'kalyan-dombivli' },
+  { label: 'Vasai-Virar', value: 'vasai-virar' },
+  { label: 'Varanasi', value: 'varanasi' },
+  { label: 'Srinagar', value: 'srinagar' },
+  { label: 'Aurangabad', value: 'aurangabad' },
+  { label: 'Dhanbad', value: 'dhanbad' },
+  { label: 'Amritsar', value: 'amritsar' },
+  { label: 'Navi Mumbai', value: 'navi-mumbai' },
+  { label: 'Allahabad', value: 'allahabad' },
+  { label: 'Ranchi', value: 'ranchi' },
+  { label: 'Howrah', value: 'howrah' },
+  { label: 'Coimbatore', value: 'coimbatore' },
+  { label: 'Jabalpur', value: 'jabalpur' },
+  { label: 'Gwalior', value: 'gwalior' },
+  { label: 'Vijayawada', value: 'vijayawada' },
+  { label: 'Jodhpur', value: 'jodhpur' },
+  { label: 'Madurai', value: 'madurai' },
+  { label: 'Raipur', value: 'raipur' },
+  { label: 'Kota', value: 'kota' },
+  { label: 'Guwahati', value: 'guwahati' },
+  { label: 'Chandigarh', value: 'chandigarh' },
+  { label: 'Solapur', value: 'solapur' },
+  { label: 'Hubli-Dharwad', value: 'hubli-dharwad' },
+  { label: 'Bareilly', value: 'bareilly' },
+  { label: 'Moradabad', value: 'moradabad' },
+  { label: 'Mysore', value: 'mysore' },
+  { label: 'Gurgaon', value: 'gurgaon' },
+  { label: 'Aligarh', value: 'aligarh' },
+  { label: 'Jalandhar', value: 'jalandhar' },
+  { label: 'Tiruchirappalli', value: 'tiruchirappalli' },
+  { label: 'Bhubaneswar', value: 'bhubaneswar' },
+  { label: 'Salem', value: 'salem' },
+  { label: 'Mira-Bhayandar', value: 'mira-bhayandar' },
+  { label: 'Warangal', value: 'warangal' },
+  { label: 'Guntur', value: 'guntur' },
+  { label: 'Bhiwandi', value: 'bhiwandi' },
+  { label: 'Saharanpur', value: 'saharanpur' },
+  { label: 'Gorakhpur', value: 'gorakhpur' },
+  { label: 'Bikaner', value: 'bikaner' },
+  { label: 'Amravati', value: 'amravati' },
+  { label: 'Noida', value: 'noida' },
+  { label: 'Jamshedpur', value: 'jamshedpur' },
+  { label: 'Bhilai', value: 'bhilai' },
+  { label: 'Cuttack', value: 'cuttack' },
+  { label: 'Firozabad', value: 'firozabad' },
+  { label: 'Kochi', value: 'kochi' },
+  { label: 'Nellore', value: 'nellore' },
+  { label: 'Bhavnagar', value: 'bhavnagar' },
+  { label: 'Dehradun', value: 'dehradun' },
+  { label: 'Durgapur', value: 'durgapur' },
+  { label: 'Asansol', value: 'asansol' },
+  { label: 'Rourkela', value: 'rourkela' },
+  { label: 'Nanded', value: 'nanded' },
+  { label: 'Kolhapur', value: 'kolhapur' },
+  { label: 'Ajmer', value: 'ajmer' },
+  { label: 'Akola', value: 'akola' },
+  { label: 'Gulbarga', value: 'gulbarga' },
+  { label: 'Jamnagar', value: 'jamnagar' },
+  { label: 'Ujjain', value: 'ujjain' },
+  { label: 'Loni', value: 'loni' },
+  { label: 'Jhansi', value: 'jhansi' },
+  { label: 'Pondicherry', value: 'pondicherry' },
+  { label: 'Jammu', value: 'jammu' },
+  { label: 'Belgaum', value: 'belgaum' },
+  { label: 'Mangalore', value: 'mangalore' },
+  { label: 'Tirunelveli', value: 'tirunelveli' },
+  { label: 'Malegaon', value: 'malegaon' },
+  { label: 'Gaya', value: 'gaya' },
+  { label: 'Udaipur', value: 'udaipur' },
+  { label: 'Kakinada', value: 'kakinada' },
+  { label: 'Davanagere', value: 'davanagere' },
+  { label: 'Kozhikode', value: 'kozhikode' },
+  { label: 'Shimla', value: 'shimla' },
+  { label: 'Panaji', value: 'panaji' },
+  { label: 'Gangtok', value: 'gangtok' },
+  { label: 'Shillong', value: 'shillong' },
+  { label: 'Imphal', value: 'imphal' },
+  { label: 'Aizawl', value: 'aizawl' },
+  { label: 'Kohima', value: 'kohima' },
+  { label: 'Itanagar', value: 'itanagar' },
+  { label: 'Agartala', value: 'agartala' },
+  { label: 'Silvassa', value: 'silvassa' },
+  { label: 'Daman', value: 'daman' },
+  { label: 'Port Blair', value: 'port-blair' },
 ] as const;
 
 const MEALS = [
@@ -85,13 +187,17 @@ const stepFields: Record<Step, (keyof AddListingClientInput)[]> = {
 };
 
 const checkboxClass =
-  'inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm text-slate-700 font-medium cursor-pointer transition-all hover:bg-slate-50/50 hover:border-slate-300 has-[:checked]:border-[#6aa337] has-[:checked]:bg-[#eef5e6] has-[:checked]:text-[#2d5c10]';
+  'inline-flex items-center justify-start gap-2.5 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm text-slate-700 font-semibold cursor-pointer transition-all active:scale-[0.98] hover:bg-slate-50/50 hover:border-slate-300 has-[:checked]:border-[#6aa337] has-[:checked]:bg-[#eef5e6] has-[:checked]:text-[#2d5c10] shadow-[0_1px_2px_rgba(0,0,0,0.02)] select-none';
 
 export function AddListingForm() {
   const router = useRouter();
   const [step, setStep] = useState<Step>(1);
   const [uploadedKeys, setUploadedKeys] = useState<string[]>([]);
   const [submitError, setSubmitError] = useState<string | null>(null);
+
+  const [cityQuery, setCityQuery] = useState('');
+  const [isCityOpen, setIsCityOpen] = useState(false);
+  const cityContainerRef = useRef<HTMLDivElement>(null);
 
   const form = useForm<FormValues>({
     resolver: zodResolver(AddListingClientSchema) as unknown as Resolver<FormValues>,
@@ -133,19 +239,44 @@ export function AddListingForm() {
   const containerType = watch('containerType');
   const isVegetarian = watch('isVegetarian');
   const hasNonVeg = watch('hasNonVeg');
+  const selectedCity = watch('city');
+
+  useEffect(() => {
+    const match = CITIES.find((c) => c.value === selectedCity);
+    if (match) {
+      setCityQuery(match.label);
+    } else if (!selectedCity) {
+      setCityQuery('');
+    }
+  }, [selectedCity]);
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (cityContainerRef.current && !cityContainerRef.current.contains(event.target as Node)) {
+        setIsCityOpen(false);
+        const match = CITIES.find((c) => c.value === selectedCity);
+        setCityQuery(match ? match.label : '');
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [selectedCity]);
+
+  const filteredCities = cityQuery === '' || (selectedCity && CITIES.find(c => c.value === selectedCity)?.label === cityQuery)
+    ? CITIES
+    : CITIES.filter((c) =>
+      c.label.toLowerCase().includes(cityQuery.toLowerCase())
+    );
 
   // Derive the single veg radio selection from the two boolean schema fields.
-  const vegChoice = isVegetarian && !hasNonVeg ? 'veg' : isVegetarian && hasNonVeg ? 'mixed' : 'nonveg';
+  const vegChoice = isVegetarian && !hasNonVeg ? 'veg' : 'mixed';
 
-  function setVegChoice(choice: 'veg' | 'mixed' | 'nonveg') {
+  function setVegChoice(choice: 'veg' | 'mixed') {
     if (choice === 'veg') {
       setValue('isVegetarian', true);
       setValue('hasNonVeg', false);
-    } else if (choice === 'mixed') {
-      setValue('isVegetarian', true);
-      setValue('hasNonVeg', true);
     } else {
-      setValue('isVegetarian', false);
+      setValue('isVegetarian', true);
       setValue('hasNonVeg', true);
     }
   }
@@ -205,18 +336,19 @@ export function AddListingForm() {
   }
 
   return (
-    <form onSubmit={handleSubmit(onSubmit as (v: FormValues) => void)} className="flex flex-col gap-8" noValidate>
+    <form onSubmit={handleSubmit(onSubmit as (v: FormValues) => void)} className="flex flex-col gap-4" noValidate>
       <StepWizard currentStep={step} totalSteps={3} stepTitles={STEP_TITLES} />
 
       {/* ───────── Step 1: Basic info ───────── */}
       {step === 1 && (
-        <div className="flex flex-col gap-5">
+        <div className="flex flex-col gap-4">
           <Controller
             name="name"
             control={control}
             render={({ field: { ref, ...field }, fieldState }) => (
               <Input
                 label="Service name"
+                placeholder="e.g. Aunty's Kitchen Special"
                 icon={<Store size={18} />}
                 {...field}
                 value={field.value ?? ''}
@@ -227,50 +359,122 @@ export function AddListingForm() {
             )}
           />
 
-          <div className="flex flex-col gap-1">
-            <label htmlFor="city" className="text-sm font-semibold text-slate-700 mb-1">
-              City
-            </label>
-            <div className="relative flex items-center w-full">
-              <span className="absolute left-3.5 text-slate-400 pointer-events-none z-10">
-                <MapPin size={18} />
-              </span>
-              <select
-                id="city"
-                {...register('city')}
-                aria-invalid={errors.city ? true : undefined}
-                aria-describedby={errors.city ? 'city-error' : undefined}
-                className={cn(FIELD_BASE, 'w-full pl-10', errors.city ? 'border-red-500' : 'border-slate-200')}
-              >
-                <option value="">Select a city…</option>
-                {CITIES.map((c) => (
-                  <option key={c.value} value={c.value}>
-                    {c.label}
-                  </option>
-                ))}
-              </select>
-            </div>
-            {errors.city && (
-              <p id="city-error" role="alert" className="text-sm text-red-600">
-                {errors.city.message}
-              </p>
-            )}
-          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {/* City Autocomplete Dropdown */}
+            <div className="flex flex-col gap-1 relative" ref={cityContainerRef}>
+              <label htmlFor="city-search" className="text-sm font-semibold text-slate-700 mb-1">
+                City
+              </label>
+              <div className="relative flex items-center w-full">
+                <span className="absolute left-3.5 text-slate-400 pointer-events-none z-10">
+                  <MapPin size={18} />
+                </span>
+                <input
+                  id="city-search"
+                  type="text"
+                  placeholder="Type to search city..."
+                  value={cityQuery}
+                  onFocus={() => setIsCityOpen(true)}
+                  onChange={(e) => {
+                    setCityQuery(e.target.value);
+                    setIsCityOpen(true);
+                    if (e.target.value === '') {
+                      setValue('city', '' as any, { shouldValidate: true });
+                    }
+                  }}
+                  className={cn(
+                    FIELD_BASE,
+                    'w-full pl-10 border-slate-200 placeholder-slate-400',
+                    errors.city ? 'border-red-500 focus:ring-red-500' : 'focus:ring-[#0f172a]'
+                  )}
+                  aria-invalid={errors.city ? true : undefined}
+                  aria-describedby={errors.city ? 'city-error' : undefined}
+                  autoComplete="off"
+                />
+              </div>
 
-          <Controller
-            name="area"
-            control={control}
-            render={({ field: { ref, ...field }, fieldState }) => (
-              <Input
-                label="Area / Neighbourhood (optional)"
-                icon={<MapPin size={18} />}
-                {...field}
-                value={field.value ?? ''}
-                maxLength={80}
-                error={fieldState.error?.message}
-              />
-            )}
-          />
+              {/* Hidden input to register city with React Hook Form */}
+              <input type="hidden" {...register('city')} />
+
+              {/* Autocomplete Suggestions Popup */}
+              {isCityOpen && (
+                <ul className="absolute top-[72px] left-0 right-0 z-50 max-h-56 overflow-y-auto rounded-2xl border border-slate-200 bg-white py-1.5 shadow-lg focus:outline-none text-sm">
+                  {filteredCities.length === 0 ? (
+                    cityQuery.trim() !== '' && (
+                      <li
+                        onClick={() => {
+                          setValue('city', cityQuery.trim() as any, { shouldValidate: true });
+                          setIsCityOpen(false);
+                        }}
+                        className="relative cursor-default select-none py-2.5 pl-4 pr-4 hover:bg-slate-50 cursor-pointer font-semibold text-[#0f172a] transition-colors"
+                      >
+                        Use "{cityQuery}" as my city
+                      </li>
+                    )
+                  ) : (
+                    <>
+                      {filteredCities.map((c) => {
+                        const isSelected = selectedCity === c.value;
+                        return (
+                          <li
+                            key={c.value}
+                            onClick={() => {
+                              setValue('city', c.value as any, { shouldValidate: true });
+                              setCityQuery(c.label);
+                              setIsCityOpen(false);
+                            }}
+                            className={cn(
+                              "relative cursor-default select-none py-2.5 pl-10 pr-4 hover:bg-slate-50 cursor-pointer font-medium transition-colors",
+                              isSelected ? "text-[#0f172a] bg-slate-50 font-semibold" : "text-slate-700"
+                            )}
+                          >
+                            {isSelected && (
+                              <span className="absolute inset-y-0 left-3.5 flex items-center text-[#0f172a]">
+                                ✓
+                              </span>
+                            )}
+                            {c.label}
+                          </li>
+                        );
+                      })}
+                      {cityQuery.trim() !== '' && !CITIES.some(c => c.label.toLowerCase() === cityQuery.trim().toLowerCase()) && (
+                        <li
+                          onClick={() => {
+                            setValue('city', cityQuery.trim() as any, { shouldValidate: true });
+                            setIsCityOpen(false);
+                          }}
+                          className="relative cursor-default select-none py-2.5 pl-4 pr-4 hover:bg-slate-50 cursor-pointer font-semibold text-[#0f172a] border-t border-slate-100 transition-colors"
+                        >
+                          Use "{cityQuery}" as my city
+                        </li>
+                      )}
+                    </>
+                  )}
+                </ul>
+              )}
+              {errors.city && (
+                <p id="city-error" role="alert" className="text-sm text-red-600 mt-1">
+                  {errors.city.message}
+                </p>
+              )}
+            </div>
+
+            <Controller
+              name="area"
+              control={control}
+              render={({ field: { ref, ...field }, fieldState }) => (
+                <Input
+                  label="Area / Neighbourhood (optional)"
+                  placeholder="e.g. Andheri East"
+                  icon={<MapPin size={18} />}
+                  {...field}
+                  value={field.value ?? ''}
+                  maxLength={80}
+                  error={fieldState.error?.message}
+                />
+              )}
+            />
+          </div>
 
           <Controller
             name="whatsappNumber"
@@ -279,39 +483,71 @@ export function AddListingForm() {
               <Input
                 label="WhatsApp number"
                 type="tel"
+                placeholder="e.g. 9876543210"
                 icon={<Phone size={18} />}
                 {...field}
                 value={field.value ?? ''}
-                // Strip spaces, dashes and parentheses so user-friendly input like
-                // "+91 98765 43210" still satisfies the strict E.164 rule.
-                onChange={(e) => onChange(e.target.value.replace(/[\s()-]/g, ''))}
+                onChange={(e) => {
+                  let val = e.target.value.replace(/[\s()-]/g, '');
+                  if (val.startsWith('+91')) {
+                    val = val.substring(3);
+                  } else if (val.startsWith('91') && val.length > 10) {
+                    val = val.substring(2);
+                  }
+                  onChange(val.slice(0, 10));
+                }}
                 required
-                hint="Include country code, e.g. +919876543210"
                 error={fieldState.error?.message}
               />
             )}
           />
 
           <fieldset className="flex flex-col gap-2 border-0 p-0">
-            <legend className="text-sm font-semibold text-slate-700 mb-1.5">Pure vegetarian?</legend>
-            <div className="flex flex-wrap gap-2">
+            <legend className="text-sm font-semibold text-slate-700 mb-1.5">Vegetarian option</legend>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               {[
-                { label: 'Yes — pure veg', value: 'veg' },
-                { label: 'Mixed (veg & non-veg)', value: 'mixed' },
-                { label: 'No — non-veg', value: 'nonveg' },
-              ].map((opt) => (
-                <label key={opt.value} className={checkboxClass}>
-                  <input
-                    type="radio"
-                    name="vegChoice"
-                    value={opt.value}
-                    checked={vegChoice === opt.value}
-                    onChange={() => setVegChoice(opt.value as 'veg' | 'mixed' | 'nonveg')}
-                    className="h-4 w-4 border-slate-300 text-[#6aa337] focus:ring-[#6aa337] focus:ring-offset-0"
-                  />
-                  {opt.label}
-                </label>
-              ))}
+                {
+                  label: 'Yes — pure veg',
+                  value: 'veg',
+                  symbol: (
+                    <span className="w-5 h-5 border-2 border-emerald-600 rounded flex items-center justify-center shrink-0 p-0.5">
+                      <span className="w-2.5 h-2.5 rounded-full bg-emerald-600" />
+                    </span>
+                  )
+                },
+                {
+                  label: 'No — mixed (veg & non-veg)',
+                  value: 'mixed',
+                  symbol: (
+                    <span className="w-5 h-5 border-2 border-amber-600 rounded flex items-center justify-center shrink-0 p-0.5">
+                      <span className="w-2.5 h-2.5 rounded-full bg-amber-600" />
+                    </span>
+                  )
+                },
+              ].map((opt) => {
+                const isChecked = vegChoice === opt.value;
+                return (
+                  <label
+                    key={opt.value}
+                    className={cn(
+                      checkboxClass,
+                      "py-3.5 px-5 flex items-center gap-3.5 transition-all",
+                      isChecked ? "border-[#6aa337] bg-[#eef5e6] text-[#2d5c10] shadow-sm" : "border-slate-200 bg-white text-slate-700 hover:border-slate-300"
+                    )}
+                  >
+                    <input
+                      type="radio"
+                      name="vegChoice"
+                      value={opt.value}
+                      checked={isChecked}
+                      onChange={() => setVegChoice(opt.value as 'veg' | 'mixed')}
+                      className="sr-only"
+                    />
+                    {opt.symbol}
+                    <span className="font-bold text-sm">{opt.label}</span>
+                  </label>
+                );
+              })}
             </div>
           </fieldset>
         </div>
@@ -319,148 +555,98 @@ export function AddListingForm() {
 
       {/* ───────── Step 2: Service details ───────── */}
       {step === 2 && (
-        <div className="flex flex-col gap-5">
-          <fieldset className="flex flex-col gap-2 border-0 p-0">
-            <legend className="text-sm font-semibold text-slate-700 mb-1.5">Meals offered</legend>
-            <div className="flex flex-wrap gap-2">
-              {MEALS.map((m) => (
-                <label key={m.value} className={checkboxClass}>
-                  <input 
-                    type="checkbox" 
-                    value={m.value} 
-                    {...register('mealsOffered')} 
-                    className="h-4 w-4 rounded border-slate-300 text-[#6aa337] focus:ring-[#6aa337] focus:ring-offset-0"
-                  />
-                  {m.label}
-                </label>
-              ))}
-            </div>
-            {errors.mealsOffered && (
-              <p role="alert" className="text-sm text-red-600">
-                {errors.mealsOffered.message}
-              </p>
-            )}
-          </fieldset>
+        <div className="flex flex-col gap-4">
+          {/* Sub-card A: Menu & Offerings */}
+          <div className="bg-slate-50/40 rounded-2xl border border-slate-100 p-4 md:p-5 flex flex-col gap-4">
+            <h3 className="text-xs font-bold uppercase tracking-wider text-[#6aa337] flex items-center gap-2 mb-1">
+              <span className="w-1.5 h-4 bg-[#6aa337] rounded-full shrink-0" />
+              Menu & Offerings
+            </h3>
 
-          <fieldset className="flex flex-col gap-2 border-0 p-0">
-            <legend className="text-sm font-semibold text-slate-700 mb-1.5">Meal sizes</legend>
-            <div className="flex flex-wrap gap-2">
-              {MEAL_SIZES.map((s) => (
-                <label key={s.value} className={checkboxClass}>
-                  <input 
-                    type="checkbox" 
-                    value={s.value} 
-                    {...register('mealSizes')} 
-                    className="h-4 w-4 rounded border-slate-300 text-[#6aa337] focus:ring-[#6aa337] focus:ring-offset-0"
-                  />
-                  {s.label}
-                </label>
-              ))}
-            </div>
-          </fieldset>
+            <fieldset className="flex flex-col gap-2 border-0 p-0">
+              <legend className="text-sm font-semibold text-slate-700 mb-1.5">Meals offered</legend>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                {MEALS.map((m) => (
+                  <label key={m.value} className={checkboxClass}>
+                    <input
+                      type="checkbox"
+                      value={m.value}
+                      {...register('mealsOffered')}
+                      className="h-4 w-4 rounded border-slate-300 text-[#6aa337] focus:ring-[#6aa337] focus:ring-offset-0"
+                    />
+                    {m.label}
+                  </label>
+                ))}
+              </div>
+              {errors.mealsOffered && (
+                <p role="alert" className="text-sm text-red-600">
+                  {errors.mealsOffered.message}
+                </p>
+              )}
+            </fieldset>
 
-          <fieldset className="flex flex-col gap-2 border-0 p-0">
-            <legend className="text-sm font-semibold text-slate-700 mb-1.5">What each meal includes</legend>
-            <div className="flex flex-wrap gap-2">
-              {MEAL_COMPONENTS.map((c) => (
-                <label key={c.value} className={checkboxClass}>
-                  <input 
-                    type="checkbox" 
-                    value={c.value} 
-                    {...register('mealComponents')} 
-                    className="h-4 w-4 rounded border-slate-300 text-[#6aa337] focus:ring-[#6aa337] focus:ring-offset-0"
-                  />
-                  {c.label}
-                </label>
-              ))}
-            </div>
-          </fieldset>
+            <fieldset className="flex flex-col gap-2 border-0 p-0">
+              <legend className="text-sm font-semibold text-slate-700 mb-1.5">Meal sizes</legend>
+              <div className="grid grid-cols-2 gap-3">
+                {MEAL_SIZES.map((s) => (
+                  <label key={s.value} className={checkboxClass}>
+                    <input
+                      type="checkbox"
+                      value={s.value}
+                      {...register('mealSizes')}
+                      className="h-4 w-4 rounded border-slate-300 text-[#6aa337] focus:ring-[#6aa337] focus:ring-offset-0"
+                    />
+                    {s.label}
+                  </label>
+                ))}
+              </div>
+            </fieldset>
 
-          <Controller
-            name="spiceLevel"
-            control={control}
-            render={({ field }) => (
-              <fieldset className="flex flex-col gap-2 border-0 p-0">
-                <legend className="text-sm font-semibold text-slate-700 mb-1.5">Spice level</legend>
-                <div className="flex flex-wrap gap-2">
-                  {[
-                    { label: 'Mild', value: 'MILD' },
-                    { label: 'Medium', value: 'MEDIUM' },
-                    { label: 'Spicy', value: 'SPICY' },
-                    { label: 'Not sure', value: '' },
-                  ].map((opt) => (
-                    <label key={opt.label} className={checkboxClass}>
-                      <input
-                        type="radio"
-                        name="spiceLevel"
-                        value={opt.value}
-                        checked={(field.value ?? '') === opt.value}
-                        onChange={() => field.onChange(opt.value === '' ? undefined : opt.value)}
-                        className="h-4 w-4 border-slate-300 text-[#6aa337] focus:ring-[#6aa337] focus:ring-offset-0"
-                      />
-                      {opt.label}
-                    </label>
-                  ))}
-                </div>
-              </fieldset>
-            )}
-          />
+            <fieldset className="flex flex-col gap-2 border-0 p-0">
+              <legend className="text-sm font-semibold text-slate-700 mb-1.5">What each meal includes</legend>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                {MEAL_COMPONENTS.map((c) => (
+                  <label key={c.value} className={checkboxClass}>
+                    <input
+                      type="checkbox"
+                      value={c.value}
+                      {...register('mealComponents')}
+                      className="h-4 w-4 rounded border-slate-300 text-[#6aa337] focus:ring-[#6aa337] focus:ring-offset-0"
+                    />
+                    {c.label}
+                  </label>
+                ))}
+              </div>
+            </fieldset>
+          </div>
 
-          <Controller
-            name="containerType"
-            control={control}
-            render={({ field }) => (
-              <fieldset className="flex flex-col gap-2 border-0 p-0">
-                <legend className="text-sm font-semibold text-slate-700 mb-1.5">Container type</legend>
-                <div className="flex flex-wrap gap-2">
-                  {[
-                    { label: 'Steel tiffin', value: 'STEEL' },
-                    { label: 'Disposable', value: 'DISPOSABLE' },
-                    { label: 'Not sure', value: '' },
-                  ].map((opt) => (
-                    <label key={opt.label} className={checkboxClass}>
-                      <input
-                        type="radio"
-                        name="containerType"
-                        value={opt.value}
-                        checked={(field.value ?? '') === opt.value}
-                        onChange={() => {
-                          const next = opt.value === '' ? undefined : opt.value;
-                          field.onChange(next);
-                          // Tiffin-wash only applies to steel containers.
-                          if (next !== 'STEEL') setValue('requiresTiffinWash', undefined);
-                        }}
-                        className="h-4 w-4 border-slate-300 text-[#6aa337] focus:ring-[#6aa337] focus:ring-offset-0"
-                      />
-                      {opt.label}
-                    </label>
-                  ))}
-                </div>
-              </fieldset>
-            )}
-          />
+          {/* Sub-card B: Service Details */}
+          <div className="bg-slate-50/40 rounded-2xl border border-slate-100 p-5 md:p-6 flex flex-col gap-6">
+            <h3 className="text-xs font-bold uppercase tracking-wider text-[#6aa337] flex items-center gap-2 mb-1">
+              <span className="w-1.5 h-4 bg-[#6aa337] rounded-full shrink-0" />
+              Service Details
+            </h3>
 
-          {containerType === 'STEEL' && (
             <Controller
-              name="requiresTiffinWash"
+              name="spiceLevel"
               control={control}
               render={({ field }) => (
                 <fieldset className="flex flex-col gap-2 border-0 p-0">
-                  <legend className="text-sm font-semibold text-slate-700 mb-1.5">Tiffin wash required?</legend>
-                  <div className="flex flex-wrap gap-2">
+                  <legend className="text-sm font-semibold text-slate-700 mb-1.5">Spice level</legend>
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                     {[
-                      { label: 'Yes', value: 'yes' },
-                      { label: 'No', value: 'no' },
+                      { label: 'Mild', value: 'MILD' },
+                      { label: 'Medium', value: 'MEDIUM' },
+                      { label: 'Spicy', value: 'SPICY' },
+                      { label: 'Not sure', value: '' },
                     ].map((opt) => (
-                      <label key={opt.value} className={checkboxClass}>
+                      <label key={opt.label} className={checkboxClass}>
                         <input
                           type="radio"
-                          name="requiresTiffinWash"
+                          name="spiceLevel"
                           value={opt.value}
-                          checked={
-                            field.value === undefined ? false : field.value === (opt.value === 'yes')
-                          }
-                          onChange={() => field.onChange(opt.value === 'yes')}
+                          checked={(field.value ?? '') === opt.value}
+                          onChange={() => field.onChange(opt.value === '' ? undefined : opt.value)}
                           className="h-4 w-4 border-slate-300 text-[#6aa337] focus:ring-[#6aa337] focus:ring-offset-0"
                         />
                         {opt.label}
@@ -470,72 +656,148 @@ export function AddListingForm() {
                 </fieldset>
               )}
             />
-          )}
 
-          <fieldset className="flex flex-col gap-2 border-0 p-0">
-            <legend className="text-sm font-semibold text-slate-700 mb-1.5">Operational days</legend>
-            <div className="flex flex-wrap gap-2">
-              {OPERATIONAL_DAYS.map((d) => (
-                <label key={d.value} className={checkboxClass}>
-                  <input 
-                    type="checkbox" 
-                    value={d.value} 
-                    {...register('operationalDays')} 
-                    className="h-4 w-4 rounded border-slate-300 text-[#6aa337] focus:ring-[#6aa337] focus:ring-offset-0"
+            <fieldset className="flex flex-col gap-2 border-0 p-0">
+              <legend className="text-sm font-semibold text-slate-700 mb-1.5">Operational days</legend>
+              <div className="grid grid-cols-4 sm:grid-cols-7 gap-2">
+                {OPERATIONAL_DAYS.map((d) => (
+                  <label key={d.value} className={checkboxClass}>
+                    <input
+                      type="checkbox"
+                      value={d.value}
+                      {...register('operationalDays')}
+                      className="h-4 w-4 rounded border-slate-300 text-[#6aa337] focus:ring-[#6aa337] focus:ring-offset-0"
+                    />
+                    {d.label}
+                  </label>
+                ))}
+              </div>
+            </fieldset>
+          </div>
+
+          {/* Sub-card C: Logistics & Pricing */}
+          <div className="bg-slate-50/40 rounded-2xl border border-slate-100 p-4 md:p-5 flex flex-col gap-4">
+            <h3 className="text-xs font-bold uppercase tracking-wider text-[#6aa337] flex items-center gap-2 mb-1">
+              <span className="w-1.5 h-4 bg-[#6aa337] rounded-full shrink-0" />
+              Logistics & Pricing
+            </h3>
+
+            <Controller
+              name="containerType"
+              control={control}
+              render={({ field }) => (
+                <fieldset className="flex flex-col gap-2 border-0 p-0">
+                  <legend className="text-sm font-semibold text-slate-700 mb-1.5">Container type</legend>
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    {[
+                      { label: 'Steel tiffin', value: 'STEEL' },
+                      { label: 'Disposable', value: 'DISPOSABLE' },
+                      { label: 'Not sure', value: '' },
+                    ].map((opt) => (
+                      <label key={opt.label} className={checkboxClass}>
+                        <input
+                          type="radio"
+                          name="containerType"
+                          value={opt.value}
+                          checked={(field.value ?? '') === opt.value}
+                          onChange={() => {
+                            const next = opt.value === '' ? undefined : opt.value;
+                            field.onChange(next);
+                            // Tiffin-wash only applies to steel containers.
+                            if (next !== 'STEEL') setValue('requiresTiffinWash', undefined);
+                          }}
+                          className="h-4 w-4 border-slate-300 text-[#6aa337] focus:ring-[#6aa337] focus:ring-offset-0"
+                        />
+                        {opt.label}
+                      </label>
+                    ))}
+                  </div>
+                </fieldset>
+              )}
+            />
+
+            {containerType === 'STEEL' && (
+              <Controller
+                name="requiresTiffinWash"
+                control={control}
+                render={({ field }) => (
+                  <fieldset className="flex flex-col gap-2 border-0 p-0">
+                    <legend className="text-sm font-semibold text-slate-700 mb-1.5">Tiffin wash required?</legend>
+                    <div className="grid grid-cols-2 gap-3">
+                      {[
+                        { label: 'Yes', value: 'yes' },
+                        { label: 'No', value: 'no' },
+                      ].map((opt) => (
+                        <label key={opt.value} className={checkboxClass}>
+                          <input
+                            type="radio"
+                            name="requiresTiffinWash"
+                            value={opt.value}
+                            checked={
+                              field.value === undefined ? false : field.value === (opt.value === 'yes')
+                            }
+                            onChange={() => field.onChange(opt.value === 'yes')}
+                            className="h-4 w-4 border-slate-300 text-[#6aa337] focus:ring-[#6aa337] focus:ring-offset-0"
+                          />
+                          {opt.label}
+                        </label>
+                      ))}
+                    </div>
+                  </fieldset>
+                )}
+              />
+            )}
+
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 mt-2">
+              <Controller
+                name="pricePerMeal"
+                control={control}
+                render={({ field, fieldState }) => (
+                  <Input
+                    label="Price per meal (₹, optional)"
+                    type="number"
+                    min={1}
+                    placeholder="e.g. 80"
+                    icon={<IndianRupee size={18} />}
+                    {...field}
+                    value={field.value ?? ''}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      field.onChange(val === '' ? undefined : Number(val));
+                    }}
+                    error={fieldState.error?.message}
                   />
-                  {d.label}
-                </label>
-              ))}
+                )}
+              />
+
+              <Controller
+                name="pricePerMonth"
+                control={control}
+                render={({ field, fieldState }) => (
+                  <Input
+                    label="Price per month (₹, optional)"
+                    type="number"
+                    min={1}
+                    placeholder="e.g. 2400"
+                    icon={<IndianRupee size={18} />}
+                    {...field}
+                    value={field.value ?? ''}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      field.onChange(val === '' ? undefined : Number(val));
+                    }}
+                    error={fieldState.error?.message}
+                  />
+                )}
+              />
             </div>
-          </fieldset>
-
-          <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
-            <Controller
-              name="pricePerMeal"
-              control={control}
-              render={({ field, fieldState }) => (
-                <Input
-                  label="Price per meal (₹, optional)"
-                  type="number"
-                  min={1}
-                  icon={<IndianRupee size={18} />}
-                  {...field}
-                  value={field.value ?? ''}
-                  onChange={(e) => {
-                    const val = e.target.value;
-                    field.onChange(val === '' ? undefined : Number(val));
-                  }}
-                  error={fieldState.error?.message}
-                />
-              )}
-            />
-
-            <Controller
-              name="pricePerMonth"
-              control={control}
-              render={({ field, fieldState }) => (
-                <Input
-                  label="Price per month (₹, optional)"
-                  type="number"
-                  min={1}
-                  icon={<IndianRupee size={18} />}
-                  {...field}
-                  value={field.value ?? ''}
-                  onChange={(e) => {
-                    const val = e.target.value;
-                    field.onChange(val === '' ? undefined : Number(val));
-                  }}
-                  error={fieldState.error?.message}
-                />
-              )}
-            />
           </div>
         </div>
       )}
 
       {/* ───────── Step 3: Delivery & images ───────── */}
       {step === 3 && (
-        <div className="flex flex-col gap-5">
+        <div className="flex flex-col gap-4">
           <Controller
             name="deliveryAreas"
             control={control}
@@ -557,6 +819,7 @@ export function AddListingForm() {
             render={({ field: { ref, ...field }, fieldState }) => (
               <Textarea
                 label="Description (optional)"
+                placeholder="Describe your meals, daily schedules, custom tiffin menus, delivery timings, etc."
                 {...field}
                 value={field.value ?? ''}
                 maxLength={800}
@@ -571,6 +834,7 @@ export function AddListingForm() {
             render={({ field: { ref, ...field }, fieldState }) => (
               <Textarea
                 label="Note to reviewer (optional)"
+                placeholder="Any special remarks or details for our validation team..."
                 hint="This is only seen by our team."
                 {...field}
                 value={field.value ?? ''}
@@ -594,7 +858,7 @@ export function AddListingForm() {
             tabIndex={-1}
             autoComplete="off"
             aria-hidden="true"
-            style={{ display: 'none' }}
+            className="absolute left-[-9999px] opacity-0 pointer-events-none"
             {...register('honeypot')}
           />
         </div>
@@ -607,27 +871,29 @@ export function AddListingForm() {
       )}
 
       {/* Navigation */}
-      <div className="flex items-center justify-between gap-4">
-        {step > 1 ? (
-          <Button type="button" variant="secondary" onClick={goBack}>
-            Back
-          </Button>
-        ) : (
-          <span />
-        )}
-
+      <div className="flex flex-col items-center gap-3 mt-3 w-full">
         {step < 3 ? (
           // Distinct keys force React to render separate DOM nodes for the
           // Next and Submit buttons. Without this, React reuses the same
           // <button> element and flips its type to "submit" mid-click,
           // causing the form to submit itself on the step 2 → 3 transition.
-          <Button key="next" type="button" onClick={goNext}>
+          <Button key="next" type="button" variant="dark" onClick={goNext} className="w-[70%] text-center">
             Next
           </Button>
         ) : (
-          <Button key="submit" type="submit" disabled={isSubmitting}>
+          <Button key="submit" type="submit" variant="dark" disabled={isSubmitting} className="w-[70%] text-center">
             {isSubmitting ? 'Submitting…' : 'Submit listing'}
           </Button>
+        )}
+
+        {step > 1 && (
+          <button
+            type="button"
+            onClick={goBack}
+            className="text-xs font-bold text-slate-500 hover:text-slate-800 transition-colors py-1 cursor-pointer focus:outline-none"
+          >
+            ← Back to previous step
+          </button>
         )}
       </div>
     </form>

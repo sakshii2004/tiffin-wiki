@@ -4,7 +4,7 @@ import { z } from 'zod';
 
 const e164Phone = z
   .string()
-  .regex(/^\+[1-9]\d{1,14}$/, 'Must be a valid phone number in E.164 format (e.g. +919876543210)');
+  .regex(/^\d{10}$/, 'Must be a valid 10-digit phone number (e.g. 9876543210)');
 
 const indianCities = [
   'mumbai', 'delhi', 'bangalore', 'hyderabad',
@@ -15,7 +15,7 @@ const indianCities = [
 // Used in: /app/(public)/add/page.tsx (client) + /app/api/listings/route.ts (server)
 export const AddListingSchema = z.object({
   name: z.string().min(1, 'Service name is required').max(120, 'Max 120 characters'),
-  city: z.enum(indianCities, { message: 'Select a city' }),
+  city: z.string().min(1, 'Select a city').max(100),
   area: z.string().max(80).optional(),
   whatsappNumber: e164Phone,
   isVegetarian: z.boolean(),

@@ -2,7 +2,7 @@ import Link from "next/link";
 
 export function SiteFooter() {
   return (
-    <footer className="border-t border-black/5 bg-cream py-6">
+    <footer className="border-t border-black/5 bg-cream py-6 mt-auto">
       <div className="container mx-auto flex flex-col items-center gap-3 px-4 sm:flex-row sm:justify-between">
         <p className="text-sm text-gray-500">
           &copy; {new Date().getFullYear()} Tiffin Wiki. All rights reserved.

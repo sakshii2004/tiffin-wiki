@@ -3,7 +3,7 @@ import type { AnchorHTMLAttributes, ButtonHTMLAttributes, ReactNode } from 'reac
 import { cn } from '@/lib/cn';
 import { FOCUS_RING_OFFSET } from '@/components/ui/styles';
 
-type Variant = 'primary' | 'secondary' | 'ghost' | 'danger' | 'whatsapp';
+type Variant = 'primary' | 'secondary' | 'ghost' | 'danger' | 'whatsapp' | 'dark';
 type Size = 'sm' | 'md' | 'lg';
 
 const base =
@@ -20,6 +20,7 @@ const variants: Record<Variant, string> = {
   whatsapp:
     'bg-green-600 text-white shadow-[var(--shadow-soft)] hover:opacity-90 ' +
     'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-green-600 focus-visible:ring-offset-2',
+  dark: `bg-[#0f172a] text-white shadow-[var(--shadow-soft)] hover:bg-slate-800 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#b85c38] focus-visible:ring-offset-2`,
 };
 
 // All sizes keep a 44x44px minimum touch target via min-h / min-w + padding.
