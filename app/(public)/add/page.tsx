@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import { SiteHeader } from "@/components/layout/SiteHeader";
 import { SiteFooter } from "@/components/layout/SiteFooter";
 import { AddListingForm } from "@/components/forms/AddListingForm";
-import { AddListingPolaroids } from "@/components/ui/HeroPolaroids";
 
 export const metadata: Metadata = {
   title: "List a tiffin service — tiffin.wiki",
@@ -16,9 +15,7 @@ export default function AddListingPage() {
     <>
       <SiteHeader />
       <main id="main-content" className="flex-1 relative z-10">
-        <div className="mx-auto max-w-2xl px-4 py-12 md:py-20 relative">
-          <AddListingPolaroids side="left" />
-          <AddListingPolaroids side="right" />
+        <div className="mx-auto max-w-2xl px-4 py-12 md:py-20">
           <h1 className="mb-2 text-3xl md:text-4xl font-extrabold text-[#0f172a] tracking-tight">
             Add a <span className="text-[#b85c38]">tiffin</span> service
           </h1>
