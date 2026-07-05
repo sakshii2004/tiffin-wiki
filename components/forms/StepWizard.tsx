@@ -13,7 +13,7 @@ export function StepWizard({ currentStep, totalSteps, stepTitles }: StepWizardPr
         <div className="absolute top-1/2 left-4 right-4 h-[2px] bg-slate-100 -translate-y-1/2 z-0" />
         <div 
           className="absolute top-1/2 left-4 h-[2px] bg-[#0f172a] -translate-y-1/2 z-0 transition-all duration-500 ease-out" 
-          style={{ width: `calc(${((currentStep - 1) / (totalSteps - 1)) * 100}% - 16px)` }}
+          style={{ width: `calc((100% - 32px) * ${(currentStep - 1) / (totalSteps - 1)})` }}
         />
 
         {/* Step Nodes */}

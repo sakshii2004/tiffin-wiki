@@ -37,7 +37,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       return session;
     },
   },
-  // MVP: use NextAuth default sign-in page (no custom /login page).
-  // Custom pages can be added in a future iteration.
-  pages: {},
+  pages: {
+    signIn: '/login',
+  },
 });

@@ -48,7 +48,7 @@ export default function AddListingPage() {
             {/* Left Info Column Wrapper (Spans full height of grid row to serve as a sticky track) */}
             <div className="md:col-span-5">
               {/* Sticky Container - h-fit prevents it from stretching to fill the parent cell height, enabling it to slide */}
-              <div className="md:sticky md:top-28 flex flex-col items-center md:items-start text-center md:text-left h-fit">
+              <div className="md:sticky md:top-36 flex flex-col items-center md:items-start text-center md:text-left h-fit">
 
                 {/* Community Directory Badge */}
                 <span className="inline-flex items-center px-3.5 py-1 rounded-full text-xs font-bold text-[#6aa337] bg-white border border-slate-200/60 shadow-[0_1px_2px_rgba(0,0,0,0.02)] mb-4 uppercase tracking-wider w-fit">

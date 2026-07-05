@@ -13,7 +13,7 @@ import { Button } from '@/components/ui/Button';
 import { TagInput } from '@/components/forms/TagInput';
 import { ImageUploader } from '@/components/forms/ImageUploader';
 import { StepWizard } from '@/components/forms/StepWizard';
-import { Store, MapPin, Phone, IndianRupee } from 'lucide-react';
+import { Store, MapPin, Phone, IndianRupee, UtensilsCrossed } from 'lucide-react';
 
 // The form carries the honeypot field in addition to the validated client schema.
 // The Zod resolver validates ONLY AddListingClientSchema (honeypot excluded), so
@@ -147,16 +147,6 @@ const MEAL_SIZES = [
   { label: 'Half tiffin', value: 'HALF' },
 ] as const;
 
-const MEAL_COMPONENTS = [
-  { label: 'Roti', value: 'ROTI' },
-  { label: 'Sabji', value: 'SABJI' },
-  { label: 'Rice', value: 'RICE' },
-  { label: 'Dal', value: 'DAL' },
-  { label: 'Salad', value: 'SALAD' },
-  { label: 'Dessert', value: 'DESSERT' },
-  { label: 'Other', value: 'OTHER' },
-] as const;
-
 const OPERATIONAL_DAYS = [
   { label: 'Mon', value: 'MON' },
   { label: 'Tue', value: 'TUE' },
@@ -186,8 +176,11 @@ const stepFields: Record<Step, (keyof AddListingClientInput)[]> = {
   3: ['deliveryAreas', 'description', 'submitterNote', 'r2Keys'],
 };
 
-const checkboxClass =
-  'inline-flex items-center justify-start gap-2.5 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm text-slate-700 font-semibold cursor-pointer transition-all active:scale-[0.98] hover:bg-slate-50/50 hover:border-slate-300 has-[:checked]:border-[#6aa337] has-[:checked]:bg-[#eef5e6] has-[:checked]:text-[#2d5c10] shadow-[0_1px_2px_rgba(0,0,0,0.02)] select-none';
+const checkboxBase =
+  'inline-flex items-center justify-center rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm text-slate-700 font-semibold cursor-pointer transition-all active:scale-[0.98] hover:bg-slate-50/50 hover:border-slate-300 has-[:checked]:border-[#6aa337] shadow-[0_1px_2px_rgba(0,0,0,0.02)] select-none';
+
+// Solid peridot fill when checked — used for all toggle-chip groups.
+const checkboxClass = `${checkboxBase} has-[:checked]:border-[#6aa337] has-[:checked]:bg-[#6aa337] has-[:checked]:text-white`;
 
 export function AddListingForm() {
   const router = useRouter();
@@ -507,7 +500,7 @@ export function AddListingForm() {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               {[
                 {
-                  label: 'Yes — pure veg',
+                  label: 'Yes, pure veg',
                   value: 'veg',
                   symbol: (
                     <span className="w-5 h-5 border-2 border-emerald-600 rounded flex items-center justify-center shrink-0 p-0.5">
@@ -516,7 +509,7 @@ export function AddListingForm() {
                   )
                 },
                 {
-                  label: 'No — mixed (veg & non-veg)',
+                  label: 'No, mixed (veg & non-veg)',
                   value: 'mixed',
                   symbol: (
                     <span className="w-5 h-5 border-2 border-amber-600 rounded flex items-center justify-center shrink-0 p-0.5">
@@ -530,7 +523,7 @@ export function AddListingForm() {
                   <label
                     key={opt.value}
                     className={cn(
-                      checkboxClass,
+                      checkboxBase,
                       "py-3.5 px-5 flex items-center gap-3.5 transition-all",
                       isChecked ? "border-[#6aa337] bg-[#eef5e6] text-[#2d5c10] shadow-sm" : "border-slate-200 bg-white text-slate-700 hover:border-slate-300"
                     )}
@@ -558,10 +551,19 @@ export function AddListingForm() {
         <div className="flex flex-col gap-4">
           {/* Sub-card A: Menu & Offerings */}
           <div className="bg-slate-50/40 rounded-2xl border border-slate-100 p-4 md:p-5 flex flex-col gap-4">
-            <h3 className="text-xs font-bold uppercase tracking-wider text-[#6aa337] flex items-center gap-2 mb-1">
-              <span className="w-1.5 h-4 bg-[#6aa337] rounded-full shrink-0" />
-              Menu & Offerings
-            </h3>
+            <div className="flex items-center justify-between mb-1">
+              <h3 className="text-xs font-bold uppercase tracking-wider text-[#6aa337] flex items-center gap-2">
+                <span className="w-1.5 h-4 bg-[#6aa337] rounded-full shrink-0" />
+                Menu & Offerings
+              </h3>
+              <button
+                type="button"
+                onClick={goBack}
+                className="text-xs font-bold text-slate-500 hover:text-slate-800 transition-colors cursor-pointer focus:outline-none"
+              >
+                ← Back
+              </button>
+            </div>
 
             <fieldset className="flex flex-col gap-2 border-0 p-0">
               <legend className="text-sm font-semibold text-slate-700 mb-1.5">Meals offered</legend>
@@ -572,7 +574,7 @@ export function AddListingForm() {
                       type="checkbox"
                       value={m.value}
                       {...register('mealsOffered')}
-                      className="h-4 w-4 rounded border-slate-300 text-[#6aa337] focus:ring-[#6aa337] focus:ring-offset-0"
+                      className="sr-only"
                     />
                     {m.label}
                   </label>
@@ -594,7 +596,7 @@ export function AddListingForm() {
                       type="checkbox"
                       value={s.value}
                       {...register('mealSizes')}
-                      className="h-4 w-4 rounded border-slate-300 text-[#6aa337] focus:ring-[#6aa337] focus:ring-offset-0"
+                      className="sr-only"
                     />
                     {s.label}
                   </label>
@@ -602,22 +604,24 @@ export function AddListingForm() {
               </div>
             </fieldset>
 
-            <fieldset className="flex flex-col gap-2 border-0 p-0">
-              <legend className="text-sm font-semibold text-slate-700 mb-1.5">What each meal includes</legend>
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                {MEAL_COMPONENTS.map((c) => (
-                  <label key={c.value} className={checkboxClass}>
-                    <input
-                      type="checkbox"
-                      value={c.value}
-                      {...register('mealComponents')}
-                      className="h-4 w-4 rounded border-slate-300 text-[#6aa337] focus:ring-[#6aa337] focus:ring-offset-0"
-                    />
-                    {c.label}
-                  </label>
-                ))}
-              </div>
-            </fieldset>
+            <Controller
+              name="mealComponents"
+              control={control}
+              render={({ field, fieldState }) => (
+                <TagInput
+                  label="What each meal includes"
+                  name="mealComponents"
+                  value={field.value ?? []}
+                  onChange={field.onChange}
+                  maxTags={10}
+                  lowercase
+                  placeholder="e.g. roti, sabji, dal…"
+                  icon={<UtensilsCrossed size={18} />}
+                  noun="items"
+                  error={fieldState.error?.message}
+                />
+              )}
+            />
           </div>
 
           {/* Sub-card B: Service Details */}
@@ -636,9 +640,9 @@ export function AddListingForm() {
                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                     {[
                       { label: 'Mild', value: 'MILD' },
-                      { label: 'Medium', value: 'MEDIUM' },
+                      { label: 'Normal', value: 'MEDIUM' },
                       { label: 'Spicy', value: 'SPICY' },
-                      { label: 'Not sure', value: '' },
+                      { label: 'Unsure', value: '' },
                     ].map((opt) => (
                       <label key={opt.label} className={checkboxClass}>
                         <input
@@ -647,7 +651,7 @@ export function AddListingForm() {
                           value={opt.value}
                           checked={(field.value ?? '') === opt.value}
                           onChange={() => field.onChange(opt.value === '' ? undefined : opt.value)}
-                          className="h-4 w-4 border-slate-300 text-[#6aa337] focus:ring-[#6aa337] focus:ring-offset-0"
+                          className="sr-only"
                         />
                         {opt.label}
                       </label>
@@ -659,14 +663,14 @@ export function AddListingForm() {
 
             <fieldset className="flex flex-col gap-2 border-0 p-0">
               <legend className="text-sm font-semibold text-slate-700 mb-1.5">Operational days</legend>
-              <div className="grid grid-cols-4 sm:grid-cols-7 gap-2">
+              <div className="grid grid-cols-4 gap-2">
                 {OPERATIONAL_DAYS.map((d) => (
                   <label key={d.value} className={checkboxClass}>
                     <input
                       type="checkbox"
                       value={d.value}
                       {...register('operationalDays')}
-                      className="h-4 w-4 rounded border-slate-300 text-[#6aa337] focus:ring-[#6aa337] focus:ring-offset-0"
+                      className="sr-only"
                     />
                     {d.label}
                   </label>
@@ -706,7 +710,7 @@ export function AddListingForm() {
                             // Tiffin-wash only applies to steel containers.
                             if (next !== 'STEEL') setValue('requiresTiffinWash', undefined);
                           }}
-                          className="h-4 w-4 border-slate-300 text-[#6aa337] focus:ring-[#6aa337] focus:ring-offset-0"
+                          className="sr-only"
                         />
                         {opt.label}
                       </label>
@@ -737,7 +741,7 @@ export function AddListingForm() {
                               field.value === undefined ? false : field.value === (opt.value === 'yes')
                             }
                             onChange={() => field.onChange(opt.value === 'yes')}
-                            className="h-4 w-4 border-slate-300 text-[#6aa337] focus:ring-[#6aa337] focus:ring-offset-0"
+                            className="sr-only"
                           />
                           {opt.label}
                         </label>
@@ -798,6 +802,20 @@ export function AddListingForm() {
       {/* ───────── Step 3: Delivery & images ───────── */}
       {step === 3 && (
         <div className="flex flex-col gap-4">
+          <div className="bg-slate-50/40 rounded-2xl border border-slate-100 p-4 md:p-5 flex flex-col gap-4">
+            <div className="flex items-center justify-between mb-1">
+              <h3 className="text-xs font-bold uppercase tracking-wider text-[#6aa337] flex items-center gap-2">
+                <span className="w-1.5 h-4 bg-[#6aa337] rounded-full shrink-0" />
+                Delivery & Images
+              </h3>
+              <button
+                type="button"
+                onClick={goBack}
+                className="text-xs font-bold text-slate-500 hover:text-slate-800 transition-colors cursor-pointer focus:outline-none"
+              >
+                ← Back
+              </button>
+            </div>
           <Controller
             name="deliveryAreas"
             control={control}
@@ -808,6 +826,7 @@ export function AddListingForm() {
                 value={field.value ?? []}
                 onChange={field.onChange}
                 maxTags={10}
+                noun="areas"
                 error={fieldState.error?.message}
               />
             )}
@@ -851,6 +870,7 @@ export function AddListingForm() {
             onUploadComplete={handleUploadComplete}
             label="Photos (optional, up to 5)"
           />
+          </div>
 
           {/* Honeypot — visually hidden, never shown to users; server-side trap. */}
           <input
@@ -871,7 +891,7 @@ export function AddListingForm() {
       )}
 
       {/* Navigation */}
-      <div className="flex flex-col items-center gap-3 mt-3 w-full">
+      <div className="flex flex-col items-center gap-3 mt-2.5 w-full">
         {step < 3 ? (
           // Distinct keys force React to render separate DOM nodes for the
           // Next and Submit buttons. Without this, React reuses the same
@@ -886,15 +906,7 @@ export function AddListingForm() {
           </Button>
         )}
 
-        {step > 1 && (
-          <button
-            type="button"
-            onClick={goBack}
-            className="text-xs font-bold text-slate-500 hover:text-slate-800 transition-colors py-1 cursor-pointer focus:outline-none"
-          >
-            ← Back to previous step
-          </button>
-        )}
+
       </div>
     </form>
   );

@@ -42,6 +42,11 @@ body {
   line-height: 1.6; /* high legibility against the off-white background */
 }
 
+::selection {
+  background-color: #0f172a;
+  color: #ffffff;
+}
+
 /* Bold, heavily weighted headings for clear hierarchy. */
 h1,
 h2,

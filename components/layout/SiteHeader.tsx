@@ -2,6 +2,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { Plus } from 'lucide-react';
 import { SearchBar } from '@/components/layout/SearchBar';
+import { NavAuthSection } from '@/components/layout/NavAuthSection';
 
 interface SiteHeaderProps {
   /** When true, renders the inline <SearchBar> (used on search & detail pages). */
@@ -41,12 +42,7 @@ export function SiteHeader({ showSearchBar = false, defaultCity, defaultQ }: Sit
 
           {/* On Mobile: Action buttons shown on the right side of the header */}
           <div className="flex items-center gap-4 md:hidden">
-            <Link
-              href="/api/auth/signin"
-              className="text-[#64748b] font-medium text-[15px] hover:text-[#1e293b] transition-colors"
-            >
-              Log in
-            </Link>
+            <NavAuthSection />
             <Link
               href="/add"
               className="bg-[#b85c38] text-white rounded-full px-4 py-2 font-medium text-[14px] flex items-center gap-1.5 hover:opacity-90 transition-all focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#b85c38]"
@@ -66,12 +62,7 @@ export function SiteHeader({ showSearchBar = false, defaultCity, defaultQ }: Sit
 
         {/* On Desktop: Action buttons */}
         <div className="hidden md:flex items-center gap-4">
-          <Link
-            href="/api/auth/signin"
-            className="text-[#64748b] font-medium text-[15px] hover:text-[#1e293b] transition-colors"
-          >
-            Log in
-          </Link>
+          <NavAuthSection />
           <Link
             href="/add"
             className="bg-[#b85c38] text-white rounded-full px-[18px] py-2 font-medium text-[14px] flex items-center gap-1.5 hover:opacity-90 transition-all focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#b85c38]"

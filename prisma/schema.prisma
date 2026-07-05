@@ -30,16 +30,6 @@ enum MealSize {
   HALF
 }
 
-enum MealComponent {
-  ROTI
-  SABJI
-  RICE
-  DAL
-  SALAD
-  DESSERT
-  OTHER
-}
-
 enum OperationalDay {
   MON
   TUE

@@ -22,7 +22,7 @@ export const AddListingSchema = z.object({
   hasNonVeg: z.boolean(),
   mealsOffered: z.array(z.enum(['BREAKFAST', 'LUNCH', 'DINNER'])).min(1, 'Select at least one meal'),
   mealSizes: z.array(z.enum(['FULL', 'HALF'])),
-  mealComponents: z.array(z.enum(['ROTI', 'SABJI', 'RICE', 'DAL', 'SALAD', 'DESSERT', 'OTHER'])),
+  mealComponents: z.array(z.string().min(1).max(60)).max(10),
   spiceLevel: z.enum(['MILD', 'MEDIUM', 'SPICY']).optional(),
   containerType: z.enum(['STEEL', 'DISPOSABLE']).optional(),
   requiresTiffinWash: z.boolean().optional(),
