@@ -60,7 +60,7 @@ export function AdminEditForm({ listingId, initial }: AdminEditFormProps) {
 
   if (!open) {
     return (
-      <div className="mb-6">
+      <div>
         <Button variant="secondary" onClick={() => setOpen(true)}>
           Edit fields
         </Button>
@@ -69,7 +69,7 @@ export function AdminEditForm({ listingId, initial }: AdminEditFormProps) {
   }
 
   return (
-    <div className="mb-6 space-y-4 rounded-2xl border border-black/5 bg-white p-6 shadow-[var(--shadow-soft)]">
+    <div className="space-y-4 rounded-2xl border border-black/5 bg-white p-6 shadow-[var(--shadow-soft)]">
       <h2 className="font-semibold text-body">Edit listing</h2>
       <Input
         label="Name"

@@ -8,6 +8,7 @@ interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
   error?: string;
   hint?: string;
   icon?: React.ReactNode;
+  prefix?: string;
 }
 
 /**
@@ -16,7 +17,7 @@ interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
  * - Errors rendered in <p role="alert"> and linked via aria-describedby.
  * - Error ID pattern: `${name}-error`; hint ID pattern: `${name}-hint`.
  */
-export function Input({ label, name, error, hint, id, className = '', icon, ...rest }: InputProps) {
+export function Input({ label, name, error, hint, id, className = '', icon, prefix, ...rest }: InputProps) {
   const inputId = id ?? name;
   const errorId = `${name}-error`;
   const hintId = `${name}-hint`;
@@ -35,6 +36,16 @@ export function Input({ label, name, error, hint, id, className = '', icon, ...r
             {icon}
           </span>
         )}
+        {prefix && (
+          <span
+            className={cn(
+              "absolute text-slate-500 font-medium pointer-events-none z-10 text-base",
+              icon ? "left-10" : "left-3.5"
+            )}
+          >
+            {prefix}
+          </span>
+        )}
         <input
           id={inputId}
           name={name}
@@ -43,7 +54,9 @@ export function Input({ label, name, error, hint, id, className = '', icon, ...r
           className={cn(
             FIELD_BASE, 
             'border-slate-200 w-full', 
-            icon ? 'pl-10' : 'pl-3', 
+            icon 
+              ? prefix ? 'pl-[74px]' : 'pl-10'
+              : prefix ? 'pl-[44px]' : 'pl-3', 
             error && 'border-red-500', 
             className
           )}

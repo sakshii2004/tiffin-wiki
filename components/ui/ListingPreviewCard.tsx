@@ -1,6 +1,7 @@
 'use client';
 
 import Image from 'next/image';
+import { toTitleCase } from '@/lib/titleCase';
 
 interface ListingPreviewCardProps {
   title: string;
@@ -54,7 +55,7 @@ export function ListingPreviewCard({
           <h4 className="font-bold text-slate-800 text-sm leading-tight truncate" title={title}>
             {title}
           </h4>
-          <p className="text-[10px] text-slate-400 font-semibold truncate">{city}</p>
+          <p className="text-[10px] text-slate-400 font-semibold truncate">{toTitleCase(city)}</p>
         </div>
 
         <div className="flex flex-col gap-2 min-w-0">

@@ -51,7 +51,7 @@ export function AdminActions({ listingId, currentStatus, currentAdminNote }: Adm
   }
 
   return (
-    <div className="space-y-4 rounded-2xl border border-black/5 bg-white p-6 shadow-[var(--shadow-soft)]">
+    <div className="space-y-4 rounded-2xl border border-black/5 bg-white p-6 shadow-[var(--shadow-soft)]" aria-label="Admin actions">
       <h2 className="font-semibold text-body">Admin Actions</h2>
 
       {!rejectMode ? (

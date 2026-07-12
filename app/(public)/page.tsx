@@ -6,6 +6,7 @@ import { SiteHeader } from '@/components/layout/SiteHeader';
 import { SiteFooter } from '@/components/layout/SiteFooter';
 import { HeroSearchBar } from '@/components/layout/HeroSearchBar';
 import { HeroPolaroids } from '@/components/ui/HeroPolaroids';
+import { toTitleCase } from '@/lib/titleCase';
 
 // ISR — Section 5.1
 export const revalidate = 900; // 15 minutes
@@ -47,6 +48,7 @@ export default async function HomePage() {
     take: 3,
     include: {
       images: { orderBy: { sortOrder: 'asc' }, take: 1 },
+      offerings: { orderBy: { sortOrder: 'asc' } },
       reviews: { select: { rating: true } },
       _count: { select: { reviews: true } },
     },
@@ -116,17 +118,29 @@ export default async function HomePage() {
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
                 {trendingListings.map((listing) => {
-                  const priceDisplay = listing.pricePerMeal
-                    ? `₹${listing.pricePerMeal}`
-                    : listing.pricePerMonth
-                      ? `₹${Math.round(listing.pricePerMonth / 30)}`
-                      : 'Contact';
+                  let cheapestMealPrice: number | null = null;
+                  let isMealPriceEstimated = false;
+
+                  if (listing.offerings && listing.offerings.length > 0) {
+                    for (const offering of listing.offerings) {
+                      if (offering.searchPricePerMeal != null) {
+                        if (cheapestMealPrice === null || offering.searchPricePerMeal < cheapestMealPrice) {
+                          cheapestMealPrice = offering.searchPricePerMeal;
+                          isMealPriceEstimated = offering.pricePerMeal == null;
+                        }
+                      }
+                    }
+                  }
+
+                  const priceDisplay = cheapestMealPrice
+                    ? `₹${cheapestMealPrice}${isMealPriceEstimated ? ' (est.)' : ''}`
+                    : 'Contact';
 
                   const mealType = listing.isVegetarian && !listing.hasNonVeg ? 'Pure Veg' : 'Veg / Non-Veg';
 
                   const locationDisplay = listing.area
-                    ? `${listing.area.charAt(0).toUpperCase() + listing.area.slice(1)}, ${listing.city.charAt(0).toUpperCase() + listing.city.slice(1)}`
-                    : listing.city.charAt(0).toUpperCase() + listing.city.slice(1);
+                    ? `${toTitleCase(listing.area)}, ${toTitleCase(listing.city)}`
+                    : toTitleCase(listing.city);
 
                   const cardTags: string[] = [];
                   if (listing.mealsOffered.includes('BREAKFAST')) cardTags.push('Breakfast Available');

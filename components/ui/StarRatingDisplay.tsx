@@ -1,15 +1,24 @@
-type Size = 'sm' | 'md' | 'lg';
+import { Star } from 'lucide-react';
 
-const sizeClass: Record<Size, string> = {
-  sm: 'text-sm',
-  md: 'text-base',
-  lg: 'text-xl',
+type Size = 'sm' | 'md' | 'lg';
+type StarColor = 'amber' | 'terracotta';
+
+const sizePx: Record<Size, number> = {
+  sm: 13,
+  md: 16,
+  lg: 20,
+};
+
+const filledColorClass: Record<StarColor, string> = {
+  amber: 'text-amber-500',
+  terracotta: 'text-[#b85c38]',
 };
 
 interface StarRatingDisplayProps {
   rating: number;
   maxRating?: number; // default 5
   size?: Size;
+  color?: StarColor;
 }
 
 /**
@@ -19,24 +28,26 @@ interface StarRatingDisplayProps {
  * Individual stars are decorative (`aria-hidden`); the accessible value is
  * exposed once via the container's aria-label.
  */
-export function StarRatingDisplay({ rating, maxRating = 5, size = 'md' }: StarRatingDisplayProps) {
+export function StarRatingDisplay({ rating, maxRating = 5, size = 'md', color = 'amber' }: StarRatingDisplayProps) {
   const rounded = Math.round(rating);
+  const px = sizePx[size];
   return (
     <span
-      className={`inline-flex items-center gap-0.5 ${sizeClass[size]}`}
+      className="inline-flex items-center gap-0.5"
       role="img"
       aria-label={`Rating: ${rating} out of ${maxRating}`}
     >
       {Array.from({ length: maxRating }, (_, i) => {
         const filled = i < rounded;
         return (
-          <span
+          <Star
             key={i}
+            size={px}
             aria-hidden="true"
-            className={filled ? 'text-amber-500' : 'text-gray-300'}
-          >
-            ★
-          </span>
+            className={filled ? filledColorClass[color] : 'text-gray-300'}
+            fill="currentColor"
+            strokeWidth={0}
+          />
         );
       })}
     </span>

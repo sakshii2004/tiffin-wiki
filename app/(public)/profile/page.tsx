@@ -7,6 +7,7 @@ import { prisma } from '@/lib/prisma';
 import { SiteHeader } from '@/components/layout/SiteHeader';
 import { SiteFooter } from '@/components/layout/SiteFooter';
 import { StarRatingDisplay } from '@/components/ui/StarRatingDisplay';
+import { toTitleCase } from '@/lib/titleCase';
 
 export const metadata: Metadata = {
   title: 'Your Profile',
@@ -135,7 +136,7 @@ export default async function ProfilePage() {
                       >
                         {review.service.name}
                         <span className="text-[#94a3b8] font-normal">
-                          {' '}· {review.service.city.charAt(0).toUpperCase() + review.service.city.slice(1).toLowerCase()}
+                          {' '}· {toTitleCase(review.service.city)}
                         </span>
                       </Link>
 

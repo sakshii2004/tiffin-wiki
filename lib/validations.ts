@@ -21,14 +21,18 @@ export const AddListingSchema = z.object({
   isVegetarian: z.boolean(),
   hasNonVeg: z.boolean(),
   mealsOffered: z.array(z.enum(['BREAKFAST', 'LUNCH', 'DINNER'])).min(1, 'Select at least one meal'),
-  mealSizes: z.array(z.enum(['FULL', 'HALF'])),
-  mealComponents: z.array(z.string().min(1).max(60)).max(10),
+  offerings: z.array(
+    z.object({
+      sizeName: z.string().min(1, 'Size name is required').max(60),
+      mealComponents: z.array(z.string().min(1).max(60)).max(10, 'Maximum 10 items'),
+      pricePerMeal: z.number().int().positive().optional(),
+      pricePerMonth: z.number().int().positive().optional(),
+    })
+  ).min(1, 'Add at least one tiffin size'),
   spiceLevel: z.enum(['MILD', 'MEDIUM', 'SPICY']).optional(),
   containerType: z.enum(['STEEL', 'DISPOSABLE']).optional(),
   requiresTiffinWash: z.boolean().optional(),
   operationalDays: z.array(z.enum(['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN'])),
-  pricePerMeal: z.number().int().positive().optional(),
-  pricePerMonth: z.number().int().positive().optional(),
   deliveryAreas: z.array(z.string().min(1)).max(10, 'Maximum 10 delivery areas'),
   description: z.string().max(800).optional(),
   submitterNote: z.string().max(300).optional(),
@@ -101,4 +105,5 @@ export const AdminRejectSchema = z.object({
 export const AdminEditSchema = AddListingSchema.partial().omit({
   honeypot: true,
   r2Keys: true,
+  offerings: true,
 });

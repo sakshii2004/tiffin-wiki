@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, type KeyboardEvent, type ReactNode } from 'react';
+import { useState, type KeyboardEvent, type ReactNode, forwardRef } from 'react';
 import { FOCUS_RING } from '@/components/ui/styles';
 import { Map } from 'lucide-react';
 
@@ -17,19 +17,23 @@ interface TagInputProps {
   noun?: string;
 }
 
-export function TagInput({
-  value,
-  onChange,
-  maxTags = 10,
-  label,
-  name,
-  error,
-  lowercase = false,
-  placeholder,
-  icon = <Map size={18} />,
-  noun = 'items',
-}: TagInputProps) {
-  const [draft, setDraft] = useState('');
+export const TagInput = forwardRef<HTMLInputElement, TagInputProps>(
+  (
+    {
+      value,
+      onChange,
+      maxTags = 10,
+      label,
+      name,
+      error,
+      lowercase = false,
+      placeholder,
+      icon = <Map size={18} />,
+      noun = 'items',
+    },
+    ref
+  ) => {
+    const [draft, setDraft] = useState('');
   const [announce, setAnnounce] = useState('');
   const errorId = `${name}-error`;
 
@@ -52,7 +56,7 @@ export function TagInput({
   }
 
   function handleKeyDown(event: KeyboardEvent<HTMLInputElement>) {
-    if (event.key === 'Enter' || event.key === ' ') {
+    if (event.key === 'Enter') {
       event.preventDefault();
       addTag();
     } else if (event.key === 'Backspace' && draft === '' && value.length > 0) {
@@ -69,7 +73,7 @@ export function TagInput({
       </div>
 
       <div
-        className={`flex flex-wrap items-center gap-2 rounded-xl border px-3 py-2.5 transition-colors focus-within:border-brand-peridot focus-within:ring-2 focus-within:ring-brand-peridot/20 ${
+        className={`flex flex-wrap items-center gap-2 rounded-xl border px-3 py-2.5 transition-colors focus-within:border-brand-peridot focus-within:ring-2 focus-within:ring-inset focus-within:ring-brand-peridot/20 ${
           error ? 'border-red-500' : 'border-slate-200'
         }`}
       >
@@ -86,13 +90,14 @@ export function TagInput({
               type="button"
               onClick={() => removeTag(tag)}
               aria-label={`Remove ${tag}`}
-              className={`rounded-full px-0.5 text-gray-500 hover:text-red-600 transition-colors focus-visible:outline-none ${FOCUS_RING}`}
+              className={`rounded-full px-0.5 text-gray-500 hover:text-red-700 transition-colors focus-visible:outline-none ${FOCUS_RING}`}
             >
               ×
             </button>
           </span>
         ))}
         <input
+          ref={ref}
           type="text"
           name={name}
           value={draft}
@@ -102,7 +107,7 @@ export function TagInput({
           aria-invalid={error ? true : undefined}
           aria-describedby={error ? errorId : undefined}
           className="min-h-[28px] min-w-[8rem] flex-1 border-0 bg-transparent px-1 py-0 text-sm text-[#0f172a] placeholder-[#94a3b8] focus:ring-0 focus-visible:outline-none disabled:cursor-not-allowed"
-          placeholder={value.length >= maxTags ? 'Maximum reached' : (placeholder ?? 'Type and press Enter or Space...')}
+          placeholder={value.length >= maxTags ? 'Maximum reached' : value.length > 0 ? '' : (placeholder ?? 'Type and press Enter to add...')}
         />
       </div>
 
@@ -121,4 +126,7 @@ export function TagInput({
       </p>
     </fieldset>
   );
-}
+  }
+);
+
+TagInput.displayName = 'TagInput';

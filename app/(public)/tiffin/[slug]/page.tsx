@@ -14,6 +14,8 @@ import { StarRatingDisplay } from '@/components/ui/StarRatingDisplay';
 import { ShowNumberButton } from '@/components/ui/ShowNumberButton';
 import { ReviewCard } from '@/components/listing/ReviewCard';
 import { SearchParamToast } from '@/components/ui/SearchParamToast';
+import { toTitleCase } from '@/lib/titleCase';
+import { Info } from 'lucide-react';
 
 export async function generateStaticParams() {
   const listings = await prisma.tiffinService.findMany({
@@ -34,9 +36,7 @@ interface DetailPageProps {
 const MEAL_VALUES = ['BREAKFAST', 'LUNCH', 'DINNER'] as const;
 type MealType = (typeof MEAL_VALUES)[number];
 
-function titleCase(value: string): string {
-  return value.charAt(0).toUpperCase() + value.slice(1).toLowerCase();
-}
+
 
 /** Keep leading country code (+NN) and last 4 digits; mask the middle. */
 function maskPhone(e164: string): string {
@@ -51,9 +51,22 @@ export async function generateMetadata({ params }: DetailPageProps): Promise<Met
   // Reuses the React cache()-wrapped fetch — no extra DB query.
   const listing = await getListingBySlug(slug);
   if (!listing) return {};
-  const cityDisplay = titleCase(listing.city);
-  const areaDisplay = listing.area ? `${listing.area}, ` : '';
-  const priceText = listing.pricePerMonth ? ` ~₹${listing.pricePerMonth}/month.` : '';
+  const cityDisplay = toTitleCase(listing.city);
+  const areaDisplay = listing.area ? `${toTitleCase(listing.area)}, ` : '';
+
+  let cheapestMonthPrice: number | null = null;
+  if (listing.offerings && listing.offerings.length > 0) {
+    for (const offering of listing.offerings) {
+      const monthPrice = offering.pricePerMonth ?? offering.searchPricePerMonth;
+      if (monthPrice != null) {
+        if (cheapestMonthPrice === null || monthPrice < cheapestMonthPrice) {
+          cheapestMonthPrice = monthPrice;
+        }
+      }
+    }
+  }
+
+  const priceText = cheapestMonthPrice ? ` ~₹${cheapestMonthPrice}/month.` : '';
   return {
     title: `${listing.name} — ${areaDisplay}${cityDisplay} — tiffin.wiki`,
     description: `${listing.name} offers ${listing.mealsOffered
@@ -76,7 +89,7 @@ export default async function TiffinDetailPage({ params, searchParams }: DetailP
     notFound();
   }
 
-  const cityDisplay = titleCase(listing.city);
+  const cityDisplay = toTitleCase(listing.city);
   const averageRating = computeAverageRating(listing.reviews);
   const reviewCount = listing._count.reviews;
 
@@ -183,7 +196,7 @@ export default async function TiffinDetailPage({ params, searchParams }: DetailP
           <div className="flex flex-col gap-3">
             <h1 className="text-3xl font-bold text-body">{listing.name}</h1>
             <div className="flex flex-wrap items-center gap-2">
-              {listing.area && <Badge variant="default">{listing.area}</Badge>}
+              {listing.area && <Badge variant="default">{toTitleCase(listing.area)}</Badge>}
               <Badge variant="brand">{cityDisplay}</Badge>
             </div>
             <p className="text-sm text-gray-500">Listed on tiffin.wiki</p>
@@ -209,32 +222,6 @@ export default async function TiffinDetailPage({ params, searchParams }: DetailP
                 </div>
               )}
 
-              {listing.mealSizes.length > 0 && (
-                <div>
-                  <dt className="mb-2 text-sm font-semibold text-gray-500">Meal sizes</dt>
-                  <dd className="flex flex-wrap gap-1.5">
-                    {listing.mealSizes.map((s) => (
-                      <Badge key={s} variant="default">
-                        {titleCase(s)}
-                      </Badge>
-                    ))}
-                  </dd>
-                </div>
-              )}
-
-              {listing.mealComponents.length > 0 && (
-                <div>
-                  <dt className="mb-2 text-sm font-semibold text-gray-500">Meal components</dt>
-                  <dd className="flex flex-wrap gap-1.5">
-                    {listing.mealComponents.map((c) => (
-                      <Badge key={c} variant="default">
-                        {titleCase(c)}
-                      </Badge>
-                    ))}
-                  </dd>
-                </div>
-              )}
-
               <div>
                 <dt className="mb-2 text-sm font-semibold text-gray-500">Veg / Non-Veg</dt>
                 <dd>
@@ -248,7 +235,7 @@ export default async function TiffinDetailPage({ params, searchParams }: DetailP
               {listing.containerType && (
                 <div>
                   <dt className="mb-2 text-sm font-semibold text-gray-500">Container type</dt>
-                  <dd className="text-body">{titleCase(listing.containerType)}</dd>
+                  <dd className="text-body">{toTitleCase(listing.containerType)}</dd>
                 </div>
               )}
 
@@ -264,30 +251,20 @@ export default async function TiffinDetailPage({ params, searchParams }: DetailP
               {listing.spiceLevel && (
                 <div>
                   <dt className="mb-2 text-sm font-semibold text-gray-500">Spice level</dt>
-                  <dd className="text-body">{titleCase(listing.spiceLevel)}</dd>
+                  <dd className="text-body">{toTitleCase(listing.spiceLevel)}</dd>
                 </div>
               )}
             </dl>
 
             {/* Right column */}
             <dl className="flex flex-col gap-5">
-              {(listing.pricePerMeal || listing.pricePerMonth) && (
-                <div>
-                  <dt className="mb-2 text-sm font-semibold text-gray-500">Price</dt>
-                  <dd className="flex flex-col gap-0.5 text-body">
-                    {listing.pricePerMeal && <span>₹{listing.pricePerMeal} / meal</span>}
-                    {listing.pricePerMonth && <span>₹{listing.pricePerMonth} / month</span>}
-                  </dd>
-                </div>
-              )}
-
               {listing.operationalDays.length > 0 && (
                 <div>
                   <dt className="mb-2 text-sm font-semibold text-gray-500">Operational days</dt>
                   <dd className="flex flex-wrap gap-1.5">
                     {listing.operationalDays.map((d) => (
                       <Badge key={d} variant="default">
-                        {titleCase(d)}
+                        {toTitleCase(d)}
                       </Badge>
                     ))}
                   </dd>
@@ -307,6 +284,72 @@ export default async function TiffinDetailPage({ params, searchParams }: DetailP
                 </div>
               )}
             </dl>
+
+            {/* Offerings Section */}
+            {listing.offerings && listing.offerings.length > 0 && (() => {
+              const daysPerWeek = listing.operationalDays.length > 0 ? listing.operationalDays.length : 6;
+              const daysPerMonth = Math.round(daysPerWeek * 4.33);
+
+              return (
+                <div className="md:col-span-2">
+                  <h3 className="mb-3 text-lg font-bold text-body">Offerings & Pricing</h3>
+                  <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                    {listing.offerings.map((offering) => (
+                      <div
+                        key={offering.id}
+                        className="rounded-2xl border border-black/5 bg-white p-4 shadow-[var(--shadow-soft)] flex flex-col justify-between gap-3"
+                      >
+                        <div className="flex items-start justify-between">
+                          <span className="font-bold text-slate-800 text-base">{offering.sizeName}</span>
+                          <div className="text-right shrink-0 space-y-0.5">
+                            {offering.pricePerMeal != null ? (
+                              <div className="text-sm font-bold text-brand-peridot">
+                                ₹{offering.pricePerMeal} <span className="text-xs text-gray-400 font-normal">/ meal</span>
+                              </div>
+                            ) : offering.searchPricePerMeal != null ? (
+                              <div
+                                className="text-sm font-bold text-slate-500 flex items-center justify-end gap-1 select-none"
+                                title={`Estimated from ₹${offering.pricePerMonth}/month divided by ${daysPerMonth} operational days/month.`}
+                              >
+                                <span>~₹{offering.searchPricePerMeal}</span>
+                                <span className="text-xs text-gray-400 font-normal">/ meal</span>
+                                <span className="text-[10px] text-gray-400 font-medium">(est.)</span>
+                                <Info size={13} className="text-gray-400 inline-block cursor-help shrink-0" />
+                              </div>
+                            ) : null}
+
+                            {offering.pricePerMonth != null ? (
+                              <div className="text-sm font-bold text-brand-peridot">
+                                ₹{offering.pricePerMonth} <span className="text-xs text-gray-400 font-normal">/ month</span>
+                              </div>
+                            ) : offering.searchPricePerMonth != null ? (
+                              <div
+                                className="text-sm font-bold text-slate-500 flex items-center justify-end gap-1 select-none"
+                                title={`Estimated from ₹${offering.pricePerMeal}/meal multiplied by ${daysPerMonth} operational days/month.`}
+                              >
+                                <span>~₹{offering.searchPricePerMonth}</span>
+                                <span className="text-xs text-gray-400 font-normal">/ month</span>
+                                <span className="text-[10px] text-gray-400 font-medium">(est.)</span>
+                                <Info size={13} className="text-gray-400 inline-block cursor-help shrink-0" />
+                              </div>
+                            ) : null}
+                          </div>
+                        </div>
+                        {offering.mealComponents.length > 0 && (
+                          <div className="flex flex-wrap gap-1 border-t border-slate-100 pt-2.5">
+                            {offering.mealComponents.map((comp) => (
+                              <Badge key={comp} variant="default">
+                                {toTitleCase(comp)}
+                              </Badge>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              );
+            })()}
           </div>
 
           {/* Description */}

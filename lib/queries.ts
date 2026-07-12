@@ -13,6 +13,7 @@ export const getListingBySlug = cache(async (slug: string) => {
     where: { slug },
     include: {
       images: { orderBy: { sortOrder: 'asc' } },
+      offerings: { orderBy: { sortOrder: 'asc' } },
       reviews: {
         where: { isVisible: true },
         orderBy: { createdAt: 'desc' },
@@ -45,15 +46,46 @@ export interface ListingWithCover {
   isVegetarian: boolean;
   hasNonVeg: boolean;
   mealsOffered: string[];
-  pricePerMonth: number | null;
-  pricePerMeal: number | null;
+  offerings: {
+    sizeName: string;
+    mealComponents: string[];
+    pricePerMeal: number | null;
+    pricePerMonth: number | null;
+    searchPricePerMeal: number | null;
+    searchPricePerMonth: number | null;
+  }[];
   images: { publicUrl: string; altText: string | null }[];
+  reviews: { rating: number }[];
   _count: { reviews: number };
 }
 
 /** Maps a Prisma listing (with cover image + review count) to ListingCard props. */
 export function toListingCardProps(listing: ListingWithCover): ListingCardProps {
   const cover = listing.images[0];
+
+  // Find cheapest pricePerMonth and pricePerMeal from offerings using computed search prices
+  let cheapestMealPrice: number | null = null;
+  let cheapestMonthPrice: number | null = null;
+  let pricePerMealEstimated = false;
+  let pricePerMonthEstimated = false;
+
+  if (listing.offerings && listing.offerings.length > 0) {
+    for (const offering of listing.offerings) {
+      if (offering.searchPricePerMeal != null) {
+        if (cheapestMealPrice === null || offering.searchPricePerMeal < cheapestMealPrice) {
+          cheapestMealPrice = offering.searchPricePerMeal;
+          pricePerMealEstimated = offering.pricePerMeal == null;
+        }
+      }
+      if (offering.searchPricePerMonth != null) {
+        if (cheapestMonthPrice === null || offering.searchPricePerMonth < cheapestMonthPrice) {
+          cheapestMonthPrice = offering.searchPricePerMonth;
+          pricePerMonthEstimated = offering.pricePerMonth == null;
+        }
+      }
+    }
+  }
+
   return {
     listing: {
       id: listing.id,
@@ -64,10 +96,13 @@ export function toListingCardProps(listing: ListingWithCover): ListingCardProps 
       isVegetarian: listing.isVegetarian,
       hasNonVeg: listing.hasNonVeg,
       mealsOffered: listing.mealsOffered,
-      pricePerMonth: listing.pricePerMonth,
-      pricePerMeal: listing.pricePerMeal,
+      pricePerMonth: cheapestMonthPrice,
+      pricePerMeal: cheapestMealPrice,
+      pricePerMealEstimated,
+      pricePerMonthEstimated,
     },
     coverImage: cover ? { publicUrl: cover.publicUrl, altText: cover.altText } : null,
     reviewCount: listing._count.reviews,
+    averageRating: computeAverageRating(listing.reviews) ?? undefined,
   };
 }

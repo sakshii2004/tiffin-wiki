@@ -5,6 +5,7 @@ import { hashIp, checkAndIncrementRateLimit, RateLimitError } from '@/lib/rateLi
 import { generateSlug } from '@/lib/slugify';
 import { getPublicUrl } from '@/lib/r2';
 import { prisma } from '@/lib/prisma';
+import { computeSearchPrices } from '@/lib/searchPrices';
 
 export async function POST(req: NextRequest) {
   // Step 46: Extract and hash the client IP. headers() is async in Next 16.
@@ -53,14 +54,24 @@ export async function POST(req: NextRequest) {
           isVegetarian: data.isVegetarian,
           hasNonVeg: data.hasNonVeg,
           mealsOffered: data.mealsOffered,
-          mealSizes: data.mealSizes,
-          mealComponents: data.mealComponents,
           spiceLevel: data.spiceLevel,
           containerType: data.containerType,
           requiresTiffinWash: data.requiresTiffinWash,
           operationalDays: data.operationalDays,
-          pricePerMeal: data.pricePerMeal,
-          pricePerMonth: data.pricePerMonth,
+          offerings: {
+            create: data.offerings.map((o, index) => {
+              const sp = computeSearchPrices(o.pricePerMeal, o.pricePerMonth, data.operationalDays);
+              return {
+                sizeName: o.sizeName,
+                mealComponents: o.mealComponents,
+                pricePerMeal: o.pricePerMeal,
+                pricePerMonth: o.pricePerMonth,
+                searchPricePerMeal: sp.searchPricePerMeal,
+                searchPricePerMonth: sp.searchPricePerMonth,
+                sortOrder: index,
+              };
+            }),
+          },
           deliveryAreas: data.deliveryAreas,
           description: data.description,
           submitterNote: data.submitterNote,

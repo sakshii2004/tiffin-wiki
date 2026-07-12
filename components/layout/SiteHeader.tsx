@@ -56,7 +56,7 @@ export function SiteHeader({ showSearchBar = false, defaultCity, defaultQ }: Sit
         {/* Optional inline search — centered on desktop, stacked on mobile */}
         {showSearchBar && (
           <div className="w-full md:max-w-md md:flex-1 md:mx-6 pb-2 md:pb-0">
-            <SearchBar defaultCity={defaultCity} defaultQ={defaultQ} />
+            <SearchBar defaultCity={defaultCity} defaultQ={defaultQ} disableScaleOnFocus />
           </div>
         )}
 

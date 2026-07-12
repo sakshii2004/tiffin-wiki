@@ -25,11 +25,6 @@ enum MealType {
   DINNER
 }
 
-enum MealSize {
-  FULL
-  HALF
-}
-
 enum OperationalDay {
   MON
   TUE
@@ -62,18 +57,14 @@ model TiffinService {
   area               String?
   whatsappNumber     String
   deliveryAreas      String[]
-  // String[] columns hold enum values serialised as strings — see the MealType,
-  // MealSize, MealComponent and OperationalDay enums above for allowed values.
+  // String[] columns hold enum values serialised as strings — see the MealType
+  // and OperationalDay enums above for allowed values.
   mealsOffered       String[]
-  mealSizes          String[]
-  mealComponents     String[]
   isVegetarian       Boolean        @default(true)
   hasNonVeg          Boolean        @default(false)
   containerType      ContainerType?
   requiresTiffinWash Boolean?
   spiceLevel         SpiceLevel?
-  pricePerMonth      Int?
-  pricePerMeal       Int?
   operationalDays    String[]
   description        String?
   status             ListingStatus  @default(PENDING)
@@ -88,13 +79,30 @@ model TiffinService {
   createdAt          DateTime       @default(now())
   updatedAt          DateTime       @updatedAt
 
-  images  ServiceImage[]
-  reviews Review[]
+  images    ServiceImage[]
+  reviews   Review[]
+  offerings TiffinOffering[]
 
   @@index([city])
   @@index([status])
   @@index([city, status])
   @@index([createdAt])
+}
+
+model TiffinOffering {
+  id             String   @id @default(cuid())
+  serviceId      String
+  sizeName       String
+  mealComponents String[]
+  pricePerMeal   Int?
+  pricePerMonth  Int?
+  searchPricePerMeal   Int?
+  searchPricePerMonth  Int?
+  sortOrder      Int      @default(0)
+
+  service TiffinService @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+
+  @@index([serviceId, sortOrder])
 }
 
 model ServiceImage {

@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { useForm, Controller, type Resolver } from 'react-hook-form';
+import { useForm, Controller, useFieldArray, type Resolver } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { AddListingClientSchema, type AddListingClientInput } from '@/lib/validations';
 import { cn } from '@/lib/cn';
@@ -13,7 +13,7 @@ import { Button } from '@/components/ui/Button';
 import { TagInput } from '@/components/forms/TagInput';
 import { ImageUploader } from '@/components/forms/ImageUploader';
 import { StepWizard } from '@/components/forms/StepWizard';
-import { Store, MapPin, Phone, IndianRupee, UtensilsCrossed } from 'lucide-react';
+import { Store, MapPin, Phone, IndianRupee, UtensilsCrossed, ChevronDown, ChevronUp, X } from 'lucide-react';
 
 // The form carries the honeypot field in addition to the validated client schema.
 // The Zod resolver validates ONLY AddListingClientSchema (honeypot excluded), so
@@ -142,11 +142,6 @@ const MEALS = [
   { label: 'Dinner', value: 'DINNER' },
 ] as const;
 
-const MEAL_SIZES = [
-  { label: 'Full tiffin', value: 'FULL' },
-  { label: 'Half tiffin', value: 'HALF' },
-] as const;
-
 const OPERATIONAL_DAYS = [
   { label: 'Mon', value: 'MON' },
   { label: 'Tue', value: 'TUE' },
@@ -164,14 +159,11 @@ const stepFields: Record<Step, (keyof AddListingClientInput)[]> = {
   1: ['name', 'city', 'area', 'whatsappNumber', 'isVegetarian', 'hasNonVeg'],
   2: [
     'mealsOffered',
-    'mealSizes',
-    'mealComponents',
+    'offerings',
     'spiceLevel',
     'containerType',
     'requiresTiffinWash',
     'operationalDays',
-    'pricePerMeal',
-    'pricePerMonth',
   ],
   3: ['deliveryAreas', 'description', 'submitterNote', 'r2Keys'],
 };
@@ -203,14 +195,11 @@ export function AddListingForm() {
       isVegetarian: true,
       hasNonVeg: false,
       mealsOffered: [],
-      mealSizes: [],
-      mealComponents: [],
+      offerings: [],
       spiceLevel: undefined,
       containerType: undefined,
       requiresTiffinWash: undefined,
       operationalDays: [],
-      pricePerMeal: undefined,
-      pricePerMonth: undefined,
       deliveryAreas: [],
       description: '',
       submitterNote: '',
@@ -228,6 +217,59 @@ export function AddListingForm() {
     watch,
     formState: { errors, isSubmitting },
   } = form;
+
+  const [customSizeName, setCustomSizeName] = useState('');
+  const [expandedOfferings, setExpandedOfferings] = useState<Record<string, boolean>>({});
+  const [exitingCardIds, setExitingCardIds] = useState<string[]>([]);
+  const [completedEntranceIds, setCompletedEntranceIds] = useState<string[]>([]);
+
+  function toggleExpandOffering(id: string) {
+    setExpandedOfferings((prev) => ({
+      ...prev,
+      [id]: !(prev[id] ?? true),
+    }));
+  }
+
+  const { fields, append, remove } = useFieldArray({
+    control,
+    name: 'offerings',
+  });
+
+  const isFullTiffinSelected = fields.some((f) => f.sizeName === 'Full tiffin');
+  const isHalfTiffinSelected = fields.some((f) => f.sizeName === 'Half tiffin');
+
+  function togglePresetSize(sizeLabel: 'Full tiffin' | 'Half tiffin') {
+    const idx = fields.findIndex((f) => f.sizeName === sizeLabel);
+    if (idx !== -1) {
+      remove(idx);
+    } else {
+      append({
+        sizeName: sizeLabel,
+        mealComponents: [],
+        pricePerMeal: undefined,
+        pricePerMonth: undefined,
+      }, {
+        focusName: `offerings.${fields.length}.mealComponents`
+      });
+    }
+  }
+
+  function handleAddCustomSize() {
+    const name = customSizeName.trim();
+    if (!name) return;
+    if (fields.some((f) => f.sizeName.toLowerCase() === name.toLowerCase())) {
+      return;
+    }
+    append({
+      sizeName: name,
+      mealComponents: [],
+      pricePerMeal: undefined,
+      pricePerMonth: undefined,
+    }, {
+      focusName: `offerings.${fields.length}.mealComponents`
+    });
+    setCustomSizeName('');
+  }
 
   const containerType = watch('containerType');
   const isVegetarian = watch('isVegetarian');
@@ -378,7 +420,7 @@ export function AddListingForm() {
                   className={cn(
                     FIELD_BASE,
                     'w-full pl-10 border-slate-200 placeholder-slate-400',
-                    errors.city ? 'border-red-500 focus:ring-red-500' : 'focus:ring-[#0f172a]'
+                    errors.city ? 'border-red-500 focus:border-red-500 focus:ring-red-500/20' : ''
                   )}
                   aria-invalid={errors.city ? true : undefined}
                   aria-describedby={errors.city ? 'city-error' : undefined}
@@ -478,6 +520,7 @@ export function AddListingForm() {
                 type="tel"
                 placeholder="e.g. 9876543210"
                 icon={<Phone size={18} />}
+                prefix="+91"
                 {...field}
                 value={field.value ?? ''}
                 onChange={(e) => {
@@ -587,41 +630,197 @@ export function AddListingForm() {
               )}
             </fieldset>
 
-            <fieldset className="flex flex-col gap-2 border-0 p-0">
-              <legend className="text-sm font-semibold text-slate-700 mb-1.5">Meal sizes</legend>
-              <div className="grid grid-cols-2 gap-3">
-                {MEAL_SIZES.map((s) => (
-                  <label key={s.value} className={checkboxClass}>
-                    <input
-                      type="checkbox"
-                      value={s.value}
-                      {...register('mealSizes')}
-                      className="sr-only"
-                    />
-                    {s.label}
-                  </label>
-                ))}
-              </div>
-            </fieldset>
+            {/* Tiffin sizes selector */}
+            <div className="flex flex-col gap-2">
+              <span className="text-sm font-semibold text-slate-700 mb-1">Meal sizes</span>
+              <div className="flex flex-col gap-3">
+                {/* Predefined sizes chips */}
+                <div className="grid grid-cols-2 gap-3">
+                  {[
+                    { label: 'Full tiffin', isSelected: isFullTiffinSelected },
+                    { label: 'Half tiffin', isSelected: isHalfTiffinSelected },
+                  ].map((preset) => (
+                    <button
+                      key={preset.label}
+                      type="button"
+                      onClick={() => togglePresetSize(preset.label as 'Full tiffin' | 'Half tiffin')}
+                      className={cn(
+                        "inline-flex items-center justify-center rounded-xl border px-4 py-2.5 text-sm font-semibold cursor-pointer transition-all active:scale-[0.98] shadow-[0_1px_2px_rgba(0,0,0,0.02)] select-none",
+                        preset.isSelected
+                          ? "border-[#6aa337] bg-[#6aa337] text-white"
+                          : "border-slate-200 bg-white text-slate-700"
+                      )}
+                    >
+                      {preset.label}
+                    </button>
+                  ))}
+                </div>
 
-            <Controller
-              name="mealComponents"
-              control={control}
-              render={({ field, fieldState }) => (
-                <TagInput
-                  label="What each meal includes"
-                  name="mealComponents"
-                  value={field.value ?? []}
-                  onChange={field.onChange}
-                  maxTags={10}
-                  lowercase
-                  placeholder="e.g. roti, sabji, dal…"
-                  icon={<UtensilsCrossed size={18} />}
-                  noun="items"
-                  error={fieldState.error?.message}
-                />
+                {/* Custom size input */}
+                <div className="flex gap-2">
+                  <div className="relative flex-1">
+                    <input
+                      type="text"
+                      placeholder="Add custom size (e.g. Jain Thali)..."
+                      value={customSizeName}
+                      onChange={(e) => setCustomSizeName(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          e.preventDefault();
+                          handleAddCustomSize();
+                        }
+                      }}
+                      className={cn(
+                        FIELD_BASE,
+                        'w-full border-slate-200 placeholder-slate-400'
+                      )}
+                    />
+                  </div>
+                  <button
+                    type="button"
+                    onClick={handleAddCustomSize}
+                    className="rounded-xl bg-slate-900 px-4 text-sm font-semibold text-white hover:bg-slate-800 transition-colors active:scale-[0.98]"
+                  >
+                    Add
+                  </button>
+                </div>
+              </div>
+              {errors.offerings && (
+                <p role="alert" className="text-sm text-red-600 mt-1">
+                  {errors.offerings.message || errors.offerings.root?.message}
+                </p>
               )}
-            />
+            </div>
+
+            {/* Offerings list */}
+            {fields.map((field, index) => {
+              const isExpanded = expandedOfferings[field.id] ?? true;
+              const isExiting = exitingCardIds.includes(field.id);
+              const hasCompletedEntrance = completedEntranceIds.includes(field.id);
+              return (
+                <div
+                  key={field.id}
+                  className={cn(
+                    "bg-white rounded-xl border border-slate-200 shadow-sm transition-all duration-300 ease-in-out flex flex-col overflow-hidden",
+                    isExiting
+                      ? "max-h-0 opacity-0 py-0 border-transparent shadow-none scale-95 my-0 gap-0"
+                      : isExpanded
+                        ? cn("max-h-[400px] pt-4 pb-4 md:pt-5 md:pb-5 px-4 md:px-5 gap-4", !hasCompletedEntrance && "animate-card-enter")
+                        : cn("max-h-[60px] py-3 px-4 gap-0", !hasCompletedEntrance && "animate-card-enter")
+                  )}
+                  onAnimationEnd={() => {
+                    setCompletedEntranceIds((prev) => [...prev, field.id]);
+                  }}
+                >
+                  <div className={cn(
+                    "flex items-center justify-between border-b transition-all duration-300",
+                    isExpanded ? "border-slate-100 pb-2" : "border-transparent pb-0"
+                  )}>
+                    <button
+                      type="button"
+                      onClick={() => toggleExpandOffering(field.id)}
+                      className="text-sm font-bold text-slate-800 flex items-center gap-2 hover:text-[#6aa337] transition-colors focus:outline-none cursor-pointer"
+                    >
+                      {isExpanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+                      <span className="w-1.5 h-3.5 bg-[#6aa337] rounded-full shrink-0" />
+                      <span>{field.sizeName}</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const cardId = field.id;
+                        setExitingCardIds((prev) => [...prev, cardId]);
+                        setTimeout(() => {
+                          const currentIndex = fields.findIndex((f) => f.id === cardId);
+                          if (currentIndex !== -1) {
+                            remove(currentIndex);
+                          }
+                          setExitingCardIds((prev) => prev.filter((id) => id !== cardId));
+                          setCompletedEntranceIds((prev) => prev.filter((id) => id !== cardId));
+                        }, 300);
+                      }}
+                      className="text-red-700 bg-red-100 hover:bg-red-50 transition-all rounded-lg p-1.5 cursor-pointer focus:outline-none"
+                      aria-label="Remove offering"
+                    >
+                      <X size={16} />
+                    </button>
+                  </div>
+
+                  <div
+                    className={cn(
+                      "grid transition-all duration-300 ease-in-out",
+                      isExpanded ? "grid-rows-[1fr] opacity-100 mt-4" : "grid-rows-[0fr] opacity-0 mt-0"
+                    )}
+                  >
+                    <div className="overflow-hidden flex flex-col gap-4">
+                      <Controller
+                        name={`offerings.${index}.mealComponents`}
+                        control={control}
+                        render={({ field: subField, fieldState }) => (
+                          <TagInput
+                            ref={subField.ref}
+                            label="What this meal includes"
+                            name={`offerings.${index}.mealComponents`}
+                            value={subField.value ?? []}
+                            onChange={subField.onChange}
+                            maxTags={10}
+                            lowercase
+                            placeholder="e.g. roti, sabji (press Enter to add)"
+                            icon={<UtensilsCrossed size={18} />}
+                            noun="items"
+                            error={fieldState.error?.message}
+                          />
+                        )}
+                      />
+
+                      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                        <Controller
+                          name={`offerings.${index}.pricePerMeal`}
+                          control={control}
+                          render={({ field: subField, fieldState }) => (
+                            <Input
+                              label="Price per meal (optional)"
+                              type="number"
+                              min={1}
+                              placeholder="e.g. 80"
+                              icon={<IndianRupee size={18} />}
+                              {...subField}
+                              value={subField.value ?? ''}
+                              onChange={(e) => {
+                                const val = e.target.value;
+                                subField.onChange(val === '' ? undefined : Number(val));
+                              }}
+                              error={fieldState.error?.message}
+                            />
+                          )}
+                        />
+
+                        <Controller
+                          name={`offerings.${index}.pricePerMonth`}
+                          control={control}
+                          render={({ field: subField, fieldState }) => (
+                            <Input
+                              label="Price per month (optional)"
+                              type="number"
+                              min={1}
+                              placeholder="e.g. 2400"
+                              icon={<IndianRupee size={18} />}
+                              {...subField}
+                              value={subField.value ?? ''}
+                              onChange={(e) => {
+                                const val = e.target.value;
+                                subField.onChange(val === '' ? undefined : Number(val));
+                              }}
+                              error={fieldState.error?.message}
+                            />
+                          )}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
           </div>
 
           {/* Sub-card B: Service Details */}
@@ -679,11 +878,11 @@ export function AddListingForm() {
             </fieldset>
           </div>
 
-          {/* Sub-card C: Logistics & Pricing */}
+          {/* Sub-card C: Logistics */}
           <div className="bg-slate-50/40 rounded-2xl border border-slate-100 p-4 md:p-5 flex flex-col gap-4">
             <h3 className="text-xs font-bold uppercase tracking-wider text-[#6aa337] flex items-center gap-2 mb-1">
               <span className="w-1.5 h-4 bg-[#6aa337] rounded-full shrink-0" />
-              Logistics & Pricing
+              Logistics
             </h3>
 
             <Controller
@@ -752,49 +951,7 @@ export function AddListingForm() {
               />
             )}
 
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 mt-2">
-              <Controller
-                name="pricePerMeal"
-                control={control}
-                render={({ field, fieldState }) => (
-                  <Input
-                    label="Price per meal (₹, optional)"
-                    type="number"
-                    min={1}
-                    placeholder="e.g. 80"
-                    icon={<IndianRupee size={18} />}
-                    {...field}
-                    value={field.value ?? ''}
-                    onChange={(e) => {
-                      const val = e.target.value;
-                      field.onChange(val === '' ? undefined : Number(val));
-                    }}
-                    error={fieldState.error?.message}
-                  />
-                )}
-              />
 
-              <Controller
-                name="pricePerMonth"
-                control={control}
-                render={({ field, fieldState }) => (
-                  <Input
-                    label="Price per month (₹, optional)"
-                    type="number"
-                    min={1}
-                    placeholder="e.g. 2400"
-                    icon={<IndianRupee size={18} />}
-                    {...field}
-                    value={field.value ?? ''}
-                    onChange={(e) => {
-                      const val = e.target.value;
-                      field.onChange(val === '' ? undefined : Number(val));
-                    }}
-                    error={fieldState.error?.message}
-                  />
-                )}
-              />
-            </div>
           </div>
         </div>
       )}
@@ -816,60 +973,61 @@ export function AddListingForm() {
                 ← Back
               </button>
             </div>
-          <Controller
-            name="deliveryAreas"
-            control={control}
-            render={({ field, fieldState }) => (
-              <TagInput
-                label="Delivery areas (up to 10)"
-                name="deliveryAreas"
-                value={field.value ?? []}
-                onChange={field.onChange}
-                maxTags={10}
-                noun="areas"
-                error={fieldState.error?.message}
-              />
-            )}
-          />
+            <Controller
+              name="deliveryAreas"
+              control={control}
+              render={({ field, fieldState }) => (
+                <TagInput
+                  label="Delivery areas (up to 10)"
+                  name="deliveryAreas"
+                  value={field.value ?? []}
+                  onChange={field.onChange}
+                  maxTags={10}
+                  noun="areas"
+                  placeholder="e.g. Bandra West, Andheri East (press Enter to add)"
+                  error={fieldState.error?.message}
+                />
+              )}
+            />
 
-          <Controller
-            name="description"
-            control={control}
-            render={({ field: { ref, ...field }, fieldState }) => (
-              <Textarea
-                label="Description (optional)"
-                placeholder="Describe your meals, daily schedules, custom tiffin menus, delivery timings, etc."
-                {...field}
-                value={field.value ?? ''}
-                maxLength={800}
-                error={fieldState.error?.message}
-              />
-            )}
-          />
+            <Controller
+              name="description"
+              control={control}
+              render={({ field: { ref, ...field }, fieldState }) => (
+                <Textarea
+                  label="Description (optional)"
+                  placeholder="Describe your meals, daily schedules, custom tiffin menus, delivery timings, etc."
+                  {...field}
+                  value={field.value ?? ''}
+                  maxLength={800}
+                  error={fieldState.error?.message}
+                />
+              )}
+            />
 
-          <Controller
-            name="submitterNote"
-            control={control}
-            render={({ field: { ref, ...field }, fieldState }) => (
-              <Textarea
-                label="Note to reviewer (optional)"
-                placeholder="Any special remarks or details for our validation team..."
-                hint="This is only seen by our team."
-                {...field}
-                value={field.value ?? ''}
-                maxLength={300}
-                error={fieldState.error?.message}
-              />
-            )}
-          />
+            <Controller
+              name="submitterNote"
+              control={control}
+              render={({ field: { ref, ...field }, fieldState }) => (
+                <Textarea
+                  label="Note to reviewer (optional)"
+                  placeholder="Any special remarks or details for our validation team..."
+                  hint="This is only seen by our team."
+                  {...field}
+                  value={field.value ?? ''}
+                  maxLength={300}
+                  error={fieldState.error?.message}
+                />
+              )}
+            />
 
-          <ImageUploader
-            maxFiles={5}
-            maxSizeMB={5}
-            context="listing"
-            onUploadComplete={handleUploadComplete}
-            label="Photos (optional, up to 5)"
-          />
+            <ImageUploader
+              maxFiles={5}
+              maxSizeMB={5}
+              context="listing"
+              onUploadComplete={handleUploadComplete}
+              label="Photos (optional, up to 5)"
+            />
           </div>
 
           {/* Honeypot — visually hidden, never shown to users; server-side trap. */}

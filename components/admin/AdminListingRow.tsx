@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { FOCUS_RING } from '@/components/ui/styles';
+import { toTitleCase } from '@/lib/titleCase';
 
 export interface AdminListingRowProps {
   listing: {
@@ -22,9 +23,7 @@ function formatDateTime(date: Date): string {
   }).format(date);
 }
 
-function capitalize(value: string): string {
-  return value.charAt(0).toUpperCase() + value.slice(1);
-}
+
 
 export function AdminListingRow({ listing }: AdminListingRowProps) {
   return (
@@ -33,7 +32,7 @@ export function AdminListingRow({ listing }: AdminListingRowProps) {
         {listing.id.slice(0, 8)}…
       </td>
       <td className="px-3 py-2 text-sm font-medium text-body">{listing.name}</td>
-      <td className="px-3 py-2 text-sm text-body">{capitalize(listing.city)}</td>
+      <td className="px-3 py-2 text-sm text-body">{toTitleCase(listing.city)}</td>
       <td className="px-3 py-2 text-sm text-gray-600">{formatDateTime(listing.createdAt)}</td>
       <td className="px-3 py-2">
         <Link

@@ -8,7 +8,7 @@
 
 /** Standard focus ring (no offset). */
 export const FOCUS_RING =
-  'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-peridot';
+  'focus:outline-none focus:border-brand-peridot focus:ring-2 focus:ring-inset focus:ring-brand-peridot/20 focus-visible:outline-none focus-visible:border-brand-peridot focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-brand-peridot/20 transition-all';
 
 /** Focus ring with offset — used by filled/button-like elements. */
 export const FOCUS_RING_OFFSET = `${FOCUS_RING} focus-visible:ring-offset-2`;

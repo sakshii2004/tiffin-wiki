@@ -46,7 +46,7 @@ const securityHeaders = [
       `script-src 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ""}`,
       "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
       "font-src 'self' https://fonts.gstatic.com",
-      "img-src 'self' data: https://images.tiffin.wiki https://lh3.googleusercontent.com",
+      "img-src 'self' data: https://images.tiffin.wiki https://lh3.googleusercontent.com https://*.r2.dev",
       "connect-src 'self' https://*.r2.cloudflarestorage.com", // R2 presigned PUT uploads
       "frame-ancestors 'none'",
     ].join("; "),
@@ -73,6 +73,12 @@ const nextConfig: NextConfig = {
       {
         protocol: "https",
         hostname: "lh3.googleusercontent.com",
+        port: "",
+        pathname: "/**",
+      },
+      {
+        protocol: "https",
+        hostname: "*.r2.dev",
         port: "",
         pathname: "/**",
       },
