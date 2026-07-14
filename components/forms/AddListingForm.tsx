@@ -425,6 +425,7 @@ export function AddListingForm() {
                   aria-invalid={errors.city ? true : undefined}
                   aria-describedby={errors.city ? 'city-error' : undefined}
                   autoComplete="off"
+                  suppressHydrationWarning
                 />
               </div>
 
@@ -674,6 +675,7 @@ export function AddListingForm() {
                         FIELD_BASE,
                         'w-full border-slate-200 placeholder-slate-400'
                       )}
+                      suppressHydrationWarning
                     />
                   </div>
                   <button
@@ -1038,6 +1040,7 @@ export function AddListingForm() {
             aria-hidden="true"
             className="absolute left-[-9999px] opacity-0 pointer-events-none"
             {...register('honeypot')}
+            suppressHydrationWarning
           />
         </div>
       )}

@@ -58,6 +58,7 @@ export function Button(props: ButtonProps) {
       <Link
         href={href}
         className={classes}
+        suppressHydrationWarning
         {...(rest as Omit<AnchorHTMLAttributes<HTMLAnchorElement>, keyof CommonProps>)}
       >
         {children}
@@ -68,6 +69,7 @@ export function Button(props: ButtonProps) {
   return (
     <button
       className={classes}
+      suppressHydrationWarning
       {...(rest as Omit<ButtonHTMLAttributes<HTMLButtonElement>, keyof CommonProps>)}
     >
       {children}

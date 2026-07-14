@@ -60,6 +60,7 @@ export function Input({ label, name, error, hint, id, className = '', icon, pref
             error && 'border-red-500', 
             className
           )}
+          suppressHydrationWarning
           {...rest}
         />
       </div>

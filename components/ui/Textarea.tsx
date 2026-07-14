@@ -52,6 +52,7 @@ export function Textarea({
         aria-invalid={error ? true : undefined}
         aria-describedby={describedBy}
         className={cn(TEXTAREA_BASE, 'border-slate-200', error && 'border-red-500', className)}
+        suppressHydrationWarning
         {...rest}
       />
       <div className="flex items-start justify-between gap-2">
