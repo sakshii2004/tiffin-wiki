@@ -1,12 +1,13 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import { ShieldCheck, MapPin, Star, TrendingUp, CheckCircle, Plus, Search } from 'lucide-react';
+import { TrendingUp, CheckCircle, Plus, Search } from 'lucide-react';
 import { prisma } from '@/lib/prisma';
 import { SiteHeader } from '@/components/layout/SiteHeader';
 import { SiteFooter } from '@/components/layout/SiteFooter';
 import { HeroSearchBar } from '@/components/layout/HeroSearchBar';
 import { HeroPolaroids } from '@/components/ui/HeroPolaroids';
-import { toTitleCase } from '@/lib/titleCase';
+import { ListingGrid } from '@/components/listing/ListingGrid';
+import { toListingCardProps } from '@/lib/queries';
 
 // ISR — Section 5.1
 export const revalidate = 900; // 15 minutes
@@ -20,7 +21,7 @@ export const metadata: Metadata = {
     description:
       'Community directory of home-style tiffin meal delivery services across India.',
     url: 'https://tiffin.wiki',
-    images: [{ url: 'https://tiffin.wiki/og-image.png', width: 1200, height: 630 }],
+    images: [{ url: '/tiffin-wiki-logo.png', width: 1200, height: 630 }],
   },
   alternates: { canonical: 'https://tiffin.wiki' },
 };
@@ -49,10 +50,12 @@ export default async function HomePage() {
     include: {
       images: { orderBy: { sortOrder: 'asc' }, take: 1 },
       offerings: { orderBy: { sortOrder: 'asc' } },
-      reviews: { select: { rating: true } },
-      _count: { select: { reviews: true } },
+      reviews: { select: { rating: true }, where: { isVisible: true } },
+      _count: { select: { reviews: { where: { isVisible: true } } } },
     },
   });
+
+  const cards = trendingListings.map(toListingCardProps);
 
   return (
     <>
@@ -104,110 +107,19 @@ export default async function HomePage() {
                 <span>Trending near you</span>
               </h2>
               <Link 
-                href="/search" 
+                href="/search?sort=popularity" 
                 className="text-[#3d7a2a] hover:text-[#2d5c10] transition-colors font-semibold text-sm flex items-center gap-1 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#3d7a2a]"
               >
                 View all mapped tiffins →
               </Link>
             </div>
 
-            {trendingListings.length === 0 ? (
+            {cards.length === 0 ? (
               <p className="rounded-2xl border border-dashed border-slate-200 px-4 py-16 text-center text-slate-500">
                 No listings yet — be the first to add one!
               </p>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-                {trendingListings.map((listing) => {
-                  let cheapestMealPrice: number | null = null;
-                  let isMealPriceEstimated = false;
-
-                  if (listing.offerings && listing.offerings.length > 0) {
-                    for (const offering of listing.offerings) {
-                      if (offering.searchPricePerMeal != null) {
-                        if (cheapestMealPrice === null || offering.searchPricePerMeal < cheapestMealPrice) {
-                          cheapestMealPrice = offering.searchPricePerMeal;
-                          isMealPriceEstimated = offering.pricePerMeal == null;
-                        }
-                      }
-                    }
-                  }
-
-                  const priceDisplay = cheapestMealPrice
-                    ? `₹${cheapestMealPrice}${isMealPriceEstimated ? ' (est.)' : ''}`
-                    : 'Contact';
-
-                  const mealType = listing.isVegetarian && !listing.hasNonVeg ? 'Pure Veg' : 'Veg / Non-Veg';
-
-                  const locationDisplay = listing.area
-                    ? `${toTitleCase(listing.area)}, ${toTitleCase(listing.city)}`
-                    : toTitleCase(listing.city);
-
-                  const cardTags: string[] = [];
-                  if (listing.mealsOffered.includes('BREAKFAST')) cardTags.push('Breakfast Available');
-                  if (listing.mealsOffered.includes('LUNCH') && listing.mealsOffered.includes('DINNER')) {
-                    cardTags.push('Lunch & Dinner');
-                  } else if (listing.mealsOffered.includes('LUNCH')) {
-                    cardTags.push('Lunch Only');
-                  } else if (listing.mealsOffered.includes('DINNER')) {
-                    cardTags.push('Dinner Only');
-                  }
-                  if (listing.operationalDays.includes('SUN')) {
-                    cardTags.push('Sunday Special');
-                  }
-                  if (listing.isVegetarian) {
-                    cardTags.push('Jain Available');
-                  }
-                  if (cardTags.length === 0) {
-                    cardTags.push('Home Delivery');
-                  }
-
-                  const upvotes = listing._count?.reviews ?? 0;
-
-                  return (
-                    <Link
-                      key={listing.id}
-                      href={`/tiffin/${listing.slug}`}
-                      className="group bg-white rounded-2xl border border-[#e2e8f0] p-5 cursor-pointer shadow-sm hover:shadow-[0_8px_32px_rgba(0,0,0,0.10)] transition-all duration-200 block text-left focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#b85c38]"
-                    >
-                      <div className="flex justify-between items-start mb-3.5 gap-4">
-                        <div>
-                          <h3 className="text-[17px] font-bold text-[#0f172a] flex items-center gap-1.5 mb-1 group-hover:text-[#b85c38] transition-colors leading-snug">
-                            {listing.name}
-                            <ShieldCheck size={16} className="text-[#3b82f6]" />
-                          </h3>
-                          <p className="text-[#64748b] text-[13px] flex items-center gap-1">
-                            <MapPin size={13} />
-                            <span>{locationDisplay}</span>
-                          </p>
-                        </div>
-                        <div className="bg-[#fdf3ef] flex items-center gap-1 px-2 py-1 rounded-md text-[#6e3220] font-bold text-[13px] border border-[#f0c0a8] shrink-0">
-                          <Star size={13} className="fill-[#b85c38] text-[#b85c38]" />
-                          <span>{upvotes}</span>
-                        </div>
-                      </div>
-
-                      <div className="flex gap-2 mb-3 flex-wrap">
-                        <span className={`text-[11px] font-bold px-2 py-1 rounded-md ${
-                          mealType === 'Pure Veg' ? 'bg-[#eef5e6] text-[#2d5c10]' : 'bg-[#f1f5f9] text-[#b91c1c]'
-                        }`}>
-                          {mealType}
-                        </span>
-                        <span className="text-[11px] font-bold px-2 py-1 rounded-md bg-[#f1f5f9] text-[#475569]">
-                          ~ {priceDisplay} / meal
-                        </span>
-                      </div>
-
-                      <div className="flex flex-wrap gap-1.5">
-                        {cardTags.map((tag) => (
-                          <span key={tag} className="text-[11px] text-[#64748b] border border-[#e2e8f0] px-2 py-0.5 rounded-md">
-                            {tag}
-                          </span>
-                        ))}
-                      </div>
-                    </Link>
-                  );
-                })}
-              </div>
+              <ListingGrid listings={cards} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5" />
             )}
           </div>
         </section>

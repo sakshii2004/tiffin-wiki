@@ -27,7 +27,6 @@ export function HeroSearchBar() {
   const router = useRouter();
   const { showToast } = useToast();
   const [searchQuery, setSearchQuery] = useState<string>('');
-  const [isLocating, setIsLocating] = useState<boolean>(false);
 
   function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -37,47 +36,6 @@ export function HeroSearchBar() {
       return;
     }
     router.push(`/search?q=${encodeURIComponent(trimmed)}`);
-  }
-
-  async function handleUseLocation() {
-    if (isLocating) return;
-    setIsLocating(true);
-    showToast('Detecting location...', 'success');
-
-    try {
-      const res = await fetch('https://ipapi.co/json/');
-      if (res.ok) {
-        const data = await res.json();
-        if (data.city) {
-          setSearchQuery(data.city);
-          showToast(`Detected location: ${data.city}`, 'success');
-          router.push(`/search?q=${encodeURIComponent(data.city)}`);
-          setIsLocating(false);
-          return;
-        }
-      }
-    } catch {
-      // Fallback to browser geolocation coordinates if IP fetch fails
-    }
-
-    if ('geolocation' in navigator) {
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          const { latitude, longitude } = position.coords;
-          showToast(`Location found: Lat ${latitude.toFixed(2)}, Lon ${longitude.toFixed(2)}`, 'success');
-          // Since reverse geocoding requires a key, we fall back to a default area or search
-          router.push(`/search?q=pune`);
-          setIsLocating(false);
-        },
-        () => {
-          showToast('Could not access your location. Please type manually.', 'error');
-          setIsLocating(false);
-        }
-      );
-    } else {
-      showToast('Geolocation is not supported by your browser.', 'error');
-      setIsLocating(false);
-    }
   }
 
   return (
@@ -107,31 +65,24 @@ export function HeroSearchBar() {
         </button>
       </form>
 
-      {/* Quick Filter Badges */}
+      {/* Value Proposition Badges */}
       <div className="flex flex-wrap justify-center gap-2.5 text-[13px] text-[#64748b]">
-        <button
-          type="button"
-          onClick={handleUseLocation}
-          disabled={isLocating}
-          className="inline-flex items-center gap-1.5 bg-white hover:bg-slate-50 disabled:opacity-50 transition-colors px-3.5 py-1.5 rounded-full border border-[#e2e8f0] shadow-[0_1px_4px_rgba(0,0,0,0.05)] cursor-pointer select-none font-medium text-[#64748b]"
+        <span
+          className="inline-flex items-center gap-1.5 bg-white px-3.5 py-1.5 rounded-full border border-[#e2e8f0] shadow-[0_1px_4px_rgba(0,0,0,0.05)] cursor-default select-none font-medium text-[#64748b]"
         >
           <NavigationIcon size={14} />
-          <span>{isLocating ? 'Locating...' : 'Use my location'}</span>
-        </button>
-        <button
-          type="button"
-          onClick={() => router.push('/search?veg=true')}
-          className="inline-flex items-center hover:bg-[#e6f0db] transition-colors px-3.5 py-1.5 bg-[#eef5e6] text-[#2d5c10] border border-[#b6d98a] rounded-full font-semibold cursor-pointer select-none"
+          <span>Home-Cooked Tiffins</span>
+        </span>
+        <span
+          className="inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-[#eef5e6] text-[#2d5c10] border border-[#b6d98a] rounded-full font-semibold cursor-default select-none"
         >
-          Pure Veg
-        </button>
-        <button
-          type="button"
-          onClick={() => router.push('/search?meal=LUNCH')}
-          className="inline-flex items-center hover:bg-[#e0edff] transition-colors px-3.5 py-1.5 bg-[#eff6ff] text-[#1d4ed8] border border-[#dbeafe] rounded-full font-semibold cursor-pointer select-none"
+          Pure Veg & Regional Meals
+        </span>
+        <span
+          className="inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-[#eff6ff] text-[#1d4ed8] border border-[#dbeafe] rounded-full font-semibold cursor-default select-none"
         >
-          Lunch / Dinner
-        </button>
+          Direct Provider Contact
+        </span>
       </div>
     </div>
   );

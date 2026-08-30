@@ -219,6 +219,22 @@ export default async function AdminListingReviewPage({
               area: listing.area ?? '',
               whatsappNumber: listing.whatsappNumber,
               description: listing.description ?? '',
+              isVegetarian: listing.isVegetarian,
+              hasNonVeg: listing.hasNonVeg,
+              mealsOffered: listing.mealsOffered,
+              operationalDays: listing.operationalDays,
+              containerType: listing.containerType ?? '',
+              spiceLevel: listing.spiceLevel ?? '',
+              requiresTiffinWash: listing.requiresTiffinWash,
+              deliveryAreas: listing.deliveryAreas,
+              submitterNote: listing.submitterNote ?? '',
+              adminNote: listing.adminNote ?? '',
+              offerings: listing.offerings.map((o) => ({
+                sizeName: o.sizeName,
+                mealComponents: o.mealComponents,
+                pricePerMeal: o.pricePerMeal,
+                pricePerMonth: o.pricePerMonth,
+              })),
             }}
           />
 

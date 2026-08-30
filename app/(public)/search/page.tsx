@@ -6,6 +6,7 @@ import { SiteHeader } from '@/components/layout/SiteHeader';
 import { SiteFooter } from '@/components/layout/SiteFooter';
 import { FilterBar } from '@/components/layout/FilterBar';
 import { ListingGrid } from '@/components/listing/ListingGrid';
+import { NoListingsFound } from '@/components/search/NoListingsFound';
 import { Pagination } from '@/components/ui/Pagination';
 import { Button } from '@/components/ui/Button';
 import { toTitleCase } from '@/lib/titleCase';
@@ -26,6 +27,7 @@ type RawSearchParams = {
   minMonthPrice?: string;
   maxMonthPrice?: string;
   page?: string;
+  sort?: string;
 };
 
 interface SearchPageProps {
@@ -37,11 +39,12 @@ const PAGE_SIZE = 20;
 
 
 export async function generateMetadata({ searchParams }: SearchPageProps): Promise<Metadata> {
-  const { city = '', q = '' } = await searchParams;
+  const { city = '', q = '', sort } = await searchParams;
   const display = city ? toTitleCase(city) : (q ? `"${q}"` : 'India');
   const alternatesUrl = new URLSearchParams();
   if (city) alternatesUrl.set('city', city);
   if (q) alternatesUrl.set('q', q);
+  if (sort) alternatesUrl.set('sort', sort);
   const qs = alternatesUrl.toString();
   return {
     title: `Tiffin services in ${display} — tiffin.wiki`,
@@ -69,26 +72,14 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
   const minMonthPrice = params.minMonthPrice ? parseInt(params.minMonthPrice, 10) : undefined;
   const maxMonthPrice = params.maxMonthPrice ? parseInt(params.maxMonthPrice, 10) : undefined;
 
-  // If neither city nor query is provided, render the search form.
-  if (!city && !q) {
-    return (
-      <>
-        <SiteHeader showSearchBar />
-        <main id="main-content" className="flex-1">
-          <div className="container mx-auto px-4 py-24 text-center">
-            <h1 className="text-2xl font-bold text-body">Search tiffin services</h1>
-            <p className="mt-3 text-gray-600">
-              Pick a city or type a location to browse verified tiffin services near you.
-            </p>
-          </div>
-        </main>
-        <SiteFooter />
-      </>
-    );
-  }
-
   const page = Math.max(1, parseInt(params.page ?? '1', 10) || 1);
   const skip = (page - 1) * PAGE_SIZE;
+
+  const sortParam = params.sort;
+  const isPopularitySort = sortParam === 'popularity' || (!city && !q && !sortParam);
+  const orderBy: Prisma.TiffinServiceOrderByWithRelationInput[] = isPopularitySort
+    ? [{ reviews: { _count: 'desc' } }, { createdAt: 'desc' }]
+    : [{ createdAt: 'desc' }];
 
   const where: Prisma.TiffinServiceWhereInput = {
     status: 'APPROVED',
@@ -143,7 +134,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
       where,
       skip,
       take: PAGE_SIZE,
-      orderBy: { createdAt: 'desc' },
+      orderBy,
       include: {
         images: { orderBy: { sortOrder: 'asc' }, take: 1 },
         offerings: { orderBy: { sortOrder: 'asc' } },
@@ -173,6 +164,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
   if (maxMealPrice !== undefined) baseParams.set('maxMealPrice', String(maxMealPrice));
   if (minMonthPrice !== undefined) baseParams.set('minMonthPrice', String(minMonthPrice));
   if (maxMonthPrice !== undefined) baseParams.set('maxMonthPrice', String(maxMonthPrice));
+  if (params.sort) baseParams.set('sort', params.sort);
 
   // JSON-LD ItemList of the current page's results.
   const jsonLd = {
@@ -216,11 +208,19 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
             {/* Right main content: Results */}
             <div className="flex-1 w-full flex flex-col gap-6">
               {total === 0 ? (
-                <div className="rounded-2xl border border-dashed border-gray-300 px-4 py-16 text-center bg-white shadow-[0_1px_2px_rgba(0,0,0,0.02)]">
-                  <p className="text-lg text-gray-600">
-                    No tiffin services found in {cityDisplay}.
-                  </p>
-                </div>
+                <NoListingsFound
+                  city={city || undefined}
+                  q={q || undefined}
+                  vegOnly={vegOnly}
+                  meals={meals}
+                  days={days}
+                  containers={containers}
+                  spices={spices}
+                  minMealPrice={minMealPrice}
+                  maxMealPrice={maxMealPrice}
+                  minMonthPrice={minMonthPrice}
+                  maxMonthPrice={maxMonthPrice}
+                />
               ) : (
                 <>
                   <p className="text-sm text-gray-600 font-medium">

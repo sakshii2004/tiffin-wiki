@@ -158,10 +158,23 @@ export default async function TiffinDetailPage({ params, searchParams }: DetailP
               </li>
               <li aria-hidden="true" className="text-slate-300">/</li>
               <li>
-                <Link href={`/search?city=${listing.city}`} className="hover:text-body transition-colors">
+                <Link href={`/search?city=${encodeURIComponent(listing.city)}`} className="hover:text-body transition-colors">
                   {cityDisplay}
                 </Link>
               </li>
+              {listing.area && (
+                <>
+                  <li aria-hidden="true" className="text-slate-300">/</li>
+                  <li>
+                    <Link
+                      href={`/search?city=${encodeURIComponent(listing.city)}&q=${encodeURIComponent(listing.area)}`}
+                      className="hover:text-body transition-colors"
+                    >
+                      {toTitleCase(listing.area)}
+                    </Link>
+                  </li>
+                </>
+              )}
               <li aria-hidden="true" className="text-slate-300">/</li>
               <li aria-current="page" className="text-body">
                 {listing.name}

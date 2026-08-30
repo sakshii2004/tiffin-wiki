@@ -1,44 +1,38 @@
 import { SiteHeader } from '@/components/layout/SiteHeader';
 import { SiteFooter } from '@/components/layout/SiteFooter';
+import { ListingCardSkeleton } from '@/components/listing/ListingCardSkeleton';
+import { Skeleton } from '@/components/ui/Skeleton';
 
-/**
- * Canonical App-Router loading UI for /search.
- *
- * Next.js automatically renders this during the server render of
- * `search/page.tsx` (which is `force-dynamic`), preventing a blank screen on
- * slow networks. CSS-only skeletons (Tailwind `animate-pulse`) — no client JS
- * spinner. Mirrors the search results layout (header + two-column card grid).
- */
 export default function SearchLoading() {
   return (
     <>
       <SiteHeader showSearchBar />
       <main id="main-content" className="flex-1">
-        <div className="container mx-auto px-4 py-8">
-          {/* Heading + results-count placeholders */}
-          <div className="mb-6 space-y-3">
-            <div className="h-7 w-64 animate-pulse rounded bg-gray-200" />
-            <div className="h-4 w-48 animate-pulse rounded bg-gray-200" />
-          </div>
-
-          {/* Skeleton card grid — matches ListingGrid (md:grid-cols-2) */}
-          <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-            {Array.from({ length: 6 }).map((_, i) => (
-              <div
-                key={i}
-                className="flex flex-col overflow-hidden rounded-2xl border border-black/5 bg-white shadow-[var(--shadow-soft)]"
-              >
-                <div className="aspect-[16/9] w-full animate-pulse bg-gray-200" />
-                <div className="flex flex-1 flex-col gap-3 p-4">
-                  <div className="h-5 w-3/4 animate-pulse rounded bg-gray-200" />
-                  <div className="flex gap-2">
-                    <div className="h-5 w-24 animate-pulse rounded bg-gray-200" />
-                    <div className="h-5 w-16 animate-pulse rounded bg-gray-200" />
-                  </div>
-                  <div className="mt-auto h-4 w-20 animate-pulse rounded bg-gray-200" />
-                </div>
+        <div className="mx-auto w-full max-w-6xl px-4 sm:px-6 lg:px-8 py-8">
+          <div className="flex flex-col lg:flex-row gap-8 items-start">
+            {/* Left sidebar: Filter bar skeleton */}
+            <aside className="w-full lg:w-60 shrink-0 hidden lg:block border border-black/5 rounded-2xl p-4 bg-white shadow-(--shadow-soft) space-y-4">
+              <Skeleton className="h-6 w-32 rounded-md" />
+              <div className="space-y-3 pt-2">
+                <Skeleton className="h-4 w-full rounded-md" />
+                <Skeleton className="h-4 w-3/4 rounded-md" />
+                <Skeleton className="h-4 w-5/6 rounded-md" />
               </div>
-            ))}
+              <div className="space-y-3 pt-4 border-t border-gray-100">
+                <Skeleton className="h-5 w-24 rounded-md" />
+                <Skeleton className="h-8 w-full rounded-md" />
+              </div>
+            </aside>
+
+            {/* Right main content: Results skeleton */}
+            <div className="flex-1 w-full flex flex-col gap-6">
+              <Skeleton className="h-5 w-48 rounded-md" />
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                {Array.from({ length: 6 }).map((_, i) => (
+                  <ListingCardSkeleton key={i} />
+                ))}
+              </div>
+            </div>
           </div>
         </div>
       </main>

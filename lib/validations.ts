@@ -105,5 +105,6 @@ export const AdminRejectSchema = z.object({
 export const AdminEditSchema = AddListingSchema.partial().omit({
   honeypot: true,
   r2Keys: true,
-  offerings: true,
+}).extend({
+  adminNote: z.string().max(800).optional(),
 });

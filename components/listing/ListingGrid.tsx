@@ -3,6 +3,7 @@ import { ListingCard, type ListingCardProps } from '@/components/listing/Listing
 interface ListingGridProps {
   listings: ListingCardProps[];
   emptyMessage?: string;
+  className?: string;
 }
 
 const PLACEHOLDER_COUNT = 6;
@@ -33,7 +34,7 @@ function resolvePlaceholders(listings: ListingCardProps[]): (string | null)[] {
   });
 }
 
-export function ListingGrid({ listings, emptyMessage }: ListingGridProps) {
+export function ListingGrid({ listings, emptyMessage, className }: ListingGridProps) {
   if (listings.length === 0) {
     return (
       <p className="rounded-2xl border border-dashed border-gray-300 px-4 py-12 text-center text-gray-500">
@@ -45,7 +46,7 @@ export function ListingGrid({ listings, emptyMessage }: ListingGridProps) {
   const placeholders = resolvePlaceholders(listings);
 
   return (
-    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+    <div className={className ?? 'grid grid-cols-1 gap-4 sm:grid-cols-2'}>
       {listings.map((props, i) => (
         <ListingCard
           key={props.listing.id}
