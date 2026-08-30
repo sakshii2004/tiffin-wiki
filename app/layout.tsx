@@ -1,8 +1,10 @@
+import React from "react";
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import { SessionProviderWrapper } from "@/components/providers/SessionProviderWrapper";
 import { ToastProvider } from "@/components/providers/ToastProvider";
+import { TelemetryProvider } from "@/components/providers/TelemetryProvider";
 
 // Geometric, clean, professional sans-serif (design system). Never cursive.
 const inter = Inter({
@@ -40,7 +42,11 @@ export default function RootLayout({
           ToastProvider supplies the global toast notification context.
         */}
         <SessionProviderWrapper>
-          <ToastProvider>{children}</ToastProvider>
+          <ToastProvider>
+            <React.Suspense fallback={null}>
+              <TelemetryProvider>{children}</TelemetryProvider>
+            </React.Suspense>
+          </ToastProvider>
         </SessionProviderWrapper>
       </body>
     </html>

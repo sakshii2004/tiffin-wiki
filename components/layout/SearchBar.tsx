@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useToast } from '@/components/providers/ToastProvider';
+import { useTelemetry } from '@/components/providers/TelemetryProvider';
 import { Search, MapPin } from 'lucide-react';
 import { toTitleCase } from '@/lib/titleCase';
 
@@ -15,6 +16,7 @@ interface SearchBarProps {
 export function SearchBar({ defaultCity = '', defaultQ = '', disableScaleOnFocus = false }: SearchBarProps) {
   const router = useRouter();
   const { showToast } = useToast();
+  const { trackEvent } = useTelemetry();
   const [searchQuery, setSearchQuery] = useState<string>(defaultQ || toTitleCase(defaultCity) || '');
 
   function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
@@ -24,6 +26,7 @@ export function SearchBar({ defaultCity = '', defaultQ = '', disableScaleOnFocus
       showToast('Please type a location to search.', 'error');
       return;
     }
+    trackEvent('SEARCH_EXECUTE', { searchQuery: trimmed, city: trimmed });
     router.push(`/search?q=${encodeURIComponent(trimmed)}`);
   }
 

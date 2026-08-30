@@ -211,3 +211,36 @@ model SubmissionRateLimit {
 
   @@unique([ipHash, date])
 }
+
+// ─── Telemetry & Analytics ───────────────────────────────────────────────────
+
+model TelemetryEvent {
+  id           String   @id @default(cuid())
+  sessionId    String   // Anonymous browser session UUID
+  eventType    String   // PAGE_VIEW, TIME_SPENT, SEARCH_EXECUTE, WHATSAPP_REVEAL, etc.
+  pathname     String   // Target route
+  
+  // Dynamic payload attributes
+  searchQuery  String?
+  city         String?
+  listingId    String?
+  listingSlug  String?
+  ctaName      String?
+  filterName   String?
+  filterValue  String?
+  durationSec  Int?
+  rating       Int?
+  
+  // Device & Network Metadata
+  deviceType   String?  // "mobile" | "desktop" | "tablet"
+  ipHash       String?  // Hashed client IP
+  country      String?  // Geolocation country
+  geoCity      String?  // Geolocation city
+  referrer     String?
+  createdAt    DateTime @default(now())
+
+  @@index([eventType, createdAt])
+  @@index([pathname, createdAt])
+  @@index([listingId, eventType])
+  @@index([sessionId])
+}

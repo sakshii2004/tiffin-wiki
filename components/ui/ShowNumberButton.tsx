@@ -2,6 +2,7 @@
 
 import { ArrowUpRight } from 'lucide-react';
 import { cn } from '@/lib/cn';
+import { useTelemetry } from '@/components/providers/TelemetryProvider';
 
 interface ShowNumberButtonProps {
   whatsappNumber: string;
@@ -27,10 +28,10 @@ function toWaLink(raw: string): string {
 }
 
 /**
- * Native HTML disclosure WhatsApp button.
- * Works natively on all mobile browsers & devices without relying on JS state hydration.
+ * Native HTML disclosure WhatsApp button with telemetry event tracking.
  */
 export function ShowNumberButton({ whatsappNumber }: ShowNumberButtonProps) {
+  const { trackEvent } = useTelemetry();
   const formatted = formatNumber(whatsappNumber);
   const waUrl = toWaLink(whatsappNumber);
 
@@ -43,6 +44,7 @@ export function ShowNumberButton({ whatsappNumber }: ShowNumberButtonProps) {
   return (
     <details className="group relative inline-block w-full sm:w-auto">
       <summary
+        onClick={() => trackEvent('WHATSAPP_REVEAL', { ctaName: 'WHATSAPP_REVEAL' })}
         className={cn(
           baseClasses,
           'flex items-center gap-2 w-full sm:w-auto group-open:hidden list-none [&::-webkit-details-marker]:hidden'
@@ -64,6 +66,7 @@ export function ShowNumberButton({ whatsappNumber }: ShowNumberButtonProps) {
         href={waUrl}
         target="_blank"
         rel="noopener noreferrer"
+        onClick={() => trackEvent('WHATSAPP_OPEN', { ctaName: 'WHATSAPP_OPEN' })}
         className={cn(
           baseClasses,
           'hidden group-open:inline-flex items-center gap-2 font-bold w-full sm:w-auto'

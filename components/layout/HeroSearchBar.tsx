@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useToast } from '@/components/providers/ToastProvider';
+import { useTelemetry } from '@/components/providers/TelemetryProvider';
 
 // SVG Icons from reference
 const SearchIcon = () => (
@@ -26,6 +27,7 @@ const NavigationIcon = ({ size = 14 }: { size?: number }) => (
 export function HeroSearchBar() {
   const router = useRouter();
   const { showToast } = useToast();
+  const { trackEvent } = useTelemetry();
   const [searchQuery, setSearchQuery] = useState<string>('');
 
   function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
@@ -35,6 +37,7 @@ export function HeroSearchBar() {
       showToast('Please type a location to search.', 'error');
       return;
     }
+    trackEvent('SEARCH_EXECUTE', { searchQuery: trimmed, city: trimmed });
     router.push(`/search?q=${encodeURIComponent(trimmed)}`);
   }
 
