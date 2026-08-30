@@ -3,8 +3,26 @@ import { randomUUID } from 'crypto';
 import { extname } from 'path';
 import { PresignSchema } from '@/lib/validations';
 import { generatePresignedPutUrl, getPublicUrl } from '@/lib/r2';
+import { getClientIp, hashIp, RateLimiters } from '@/lib/rateLimit';
 
 export async function POST(req: NextRequest) {
+  // IP-based rate limiting to prevent spamming presigned URLs
+  const rawIp = getClientIp(req.headers);
+  const ipHash = hashIp(rawIp);
+  const rateLimit = RateLimiters.uploadPresign(ipHash);
+
+  if (!rateLimit.allowed) {
+    return NextResponse.json(
+      { error: 'Too many upload requests. Please try again later.' },
+      {
+        status: 429,
+        headers: {
+          'Retry-After': String(rateLimit.resetInSeconds),
+        },
+      },
+    );
+  }
+
   const body = await req.json();
 
   // Validate input — contentType must be image/* (enforced by PresignSchema regex)

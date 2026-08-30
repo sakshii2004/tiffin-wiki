@@ -3,8 +3,26 @@ import { auth } from '@/lib/auth';
 import { ReviewSchema } from '@/lib/validations';
 import { getPublicUrl } from '@/lib/r2';
 import { prisma } from '@/lib/prisma';
+import { getClientIp, hashIp, RateLimiters } from '@/lib/rateLimit';
 
 export async function POST(req: NextRequest) {
+  // Rate limiting per IP to prevent spam abuse
+  const rawIp = getClientIp(req.headers);
+  const ipHash = hashIp(rawIp);
+  const rateLimit = RateLimiters.reviews(ipHash);
+
+  if (!rateLimit.allowed) {
+    return NextResponse.json(
+      { error: 'Too many reviews submitted. Please try again later.' },
+      {
+        status: 429,
+        headers: {
+          'Retry-After': String(rateLimit.resetInSeconds),
+        },
+      },
+    );
+  }
+
   // Auth required (Section 8 — /api/reviews requires Google OAuth)
   const session = await auth();
   if (!session?.user?.id) {

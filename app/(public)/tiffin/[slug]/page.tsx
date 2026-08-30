@@ -66,16 +66,46 @@ export async function generateMetadata({ params }: DetailPageProps): Promise<Met
   }
 
   const priceText = cheapestMonthPrice ? ` ~₹${cheapestMonthPrice}/month.` : '';
+  const pageTitle = `${listing.name} — ${areaDisplay}${cityDisplay} — tiffin.wiki`;
+  const pageDescription = `${listing.name} offers ${listing.mealsOffered
+    .join(', ')
+    .toLowerCase()} tiffin in ${areaDisplay}${cityDisplay}.${priceText}`;
+  const canonicalUrl = `https://tiffin.wiki/tiffin/${slug}`;
+  const coverImage = listing.images?.[0]?.publicUrl;
+
   return {
-    title: `${listing.name} — ${areaDisplay}${cityDisplay} — tiffin.wiki`,
-    description: `${listing.name} offers ${listing.mealsOffered
-      .join(', ')
-      .toLowerCase()} tiffin in ${areaDisplay}${cityDisplay}.${priceText}`,
+    title: pageTitle,
+    description: pageDescription,
     openGraph: {
-      title: `${listing.name} — tiffin.wiki`,
-      url: `https://tiffin.wiki/tiffin/${slug}`,
+      title: pageTitle,
+      description: pageDescription,
+      url: canonicalUrl,
+      type: 'article',
+      images: coverImage
+        ? [
+            {
+              url: coverImage,
+              width: 1200,
+              height: 630,
+              alt: `${listing.name} tiffin service in ${cityDisplay}`,
+            },
+          ]
+        : [
+            {
+              url: '/tiffin-wiki-logo.png',
+              width: 1200,
+              height: 630,
+              alt: 'tiffin.wiki',
+            },
+          ],
     },
-    alternates: { canonical: `https://tiffin.wiki/tiffin/${slug}` },
+    twitter: {
+      card: 'summary_large_image',
+      title: pageTitle,
+      description: pageDescription,
+      images: coverImage ? [coverImage] : ['/tiffin-wiki-logo.png'],
+    },
+    alternates: { canonical: canonicalUrl },
   };
 }
 
@@ -96,10 +126,27 @@ export default async function TiffinDetailPage({ params, searchParams }: DetailP
     MEAL_VALUES.includes(m as MealType),
   );
 
+  let cheapestMonthPrice: number | null = null;
+  if (listing.offerings && listing.offerings.length > 0) {
+    for (const offering of listing.offerings) {
+      const monthPrice = offering.pricePerMonth ?? offering.searchPricePerMonth;
+      if (monthPrice != null) {
+        if (cheapestMonthPrice === null || monthPrice < cheapestMonthPrice) {
+          cheapestMonthPrice = monthPrice;
+        }
+      }
+    }
+  }
+
   const jsonLd = {
     '@context': 'https://schema.org',
     '@type': 'LocalBusiness',
     name: listing.name,
+    url: `https://tiffin.wiki/tiffin/${slug}`,
+    image: listing.images.map((img) => img.publicUrl),
+    servesCuisine: 'Indian',
+    currenciesAccepted: 'INR',
+    priceRange: cheapestMonthPrice ? `₹${cheapestMonthPrice}/month` : '₹₹',
     address: {
       '@type': 'PostalAddress',
       addressLocality: listing.area ?? listing.city,

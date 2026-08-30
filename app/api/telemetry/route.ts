@@ -1,17 +1,28 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { headers } from 'next/headers';
 import { prisma } from '@/lib/prisma';
-import { hashIp } from '@/lib/rateLimit';
+import { getClientIp, hashIp, RateLimiters } from '@/lib/rateLimit';
 
 export async function POST(req: NextRequest) {
   try {
-    const headersList = await headers();
-    const forwarded = headersList.get('x-forwarded-for');
-    const rawIp = forwarded ? forwarded.split(',')[0].trim() : '0.0.0.0';
+    const rawIp = getClientIp(req.headers);
     const ipHash = hashIp(rawIp);
 
-    const country = headersList.get('x-vercel-ip-country') || headersList.get('x-geo-country') || undefined;
-    const geoCity = headersList.get('x-vercel-ip-city') || headersList.get('x-geo-city') || undefined;
+    // IP-based rate limiting on telemetry ingestion (max 60 batch requests per minute)
+    const rateLimit = RateLimiters.telemetry(ipHash);
+    if (!rateLimit.allowed) {
+      return NextResponse.json(
+        { error: 'Too many telemetry events. Rate limit exceeded.' },
+        {
+          status: 429,
+          headers: {
+            'Retry-After': String(rateLimit.resetInSeconds),
+          },
+        },
+      );
+    }
+
+    const country = req.headers.get('x-vercel-ip-country') || req.headers.get('x-geo-country') || undefined;
+    const geoCity = req.headers.get('x-vercel-ip-city') || req.headers.get('x-geo-city') || undefined;
 
     let text = '';
     try {

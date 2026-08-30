@@ -39,18 +39,63 @@ const PAGE_SIZE = 20;
 
 
 export async function generateMetadata({ searchParams }: SearchPageProps): Promise<Metadata> {
-  const { city = '', q = '', sort } = await searchParams;
+  const params = await searchParams;
+  const { city = '', q = '' } = params;
   const display = city ? toTitleCase(city) : (q ? `"${q}"` : 'India');
-  const alternatesUrl = new URLSearchParams();
-  if (city) alternatesUrl.set('city', city);
-  if (q) alternatesUrl.set('q', q);
-  if (sort) alternatesUrl.set('sort', sort);
-  const qs = alternatesUrl.toString();
+  
+  // Clean canonical: canonicalize back to the primary city or query route to prevent crawl bloat
+  const canonicalParams = new URLSearchParams();
+  if (city) canonicalParams.set('city', city);
+  else if (q) canonicalParams.set('q', q);
+  const canonicalQs = canonicalParams.toString();
+  const canonicalUrl = `https://tiffin.wiki/search${canonicalQs ? '?' + canonicalQs : ''}`;
+
+  // Check if deep filtering is applied (filters other than city or main query)
+  const hasExtraFilters = Boolean(
+    params.veg ||
+    params.meals ||
+    params.days ||
+    params.containers ||
+    params.spices ||
+    params.minMealPrice ||
+    params.maxMealPrice ||
+    params.minMonthPrice ||
+    params.maxMonthPrice ||
+    params.sort ||
+    params.page,
+  );
+
+  const title = `Tiffin services in ${display} — tiffin.wiki`;
+  const description = `Browse verified home-style tiffin meal services in ${display}. Community-listed, manually verified.`;
+
   return {
-    title: `Tiffin services in ${display} — tiffin.wiki`,
-    description: `Browse verified tiffin meal services in ${display}. Community-listed, manually verified.`,
-    robots: { index: true, follow: true },
-    alternates: { canonical: `https://tiffin.wiki/search${qs ? '?' + qs : ''}` },
+    title,
+    description,
+    robots: {
+      index: !hasExtraFilters, // Index primary city/query landing searches; avoid index bloat on deep permutations
+      follow: true,
+    },
+    openGraph: {
+      title,
+      description,
+      url: canonicalUrl,
+      type: 'website',
+      images: [
+        {
+          url: '/tiffin-wiki-logo.png',
+          width: 1200,
+          height: 630,
+          alt: `Tiffin services in ${display}`,
+        },
+      ],
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title,
+      description,
+      images: ['/tiffin-wiki-logo.png'],
+    },
+    alternates: { canonical: canonicalUrl },
   };
 }
 
