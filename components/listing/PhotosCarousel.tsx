@@ -127,28 +127,31 @@ export function PhotosCarousel({ images, listingName }: PhotosCarouselProps) {
           className="flex gap-4 overflow-x-auto pb-1 snap-x snap-mandatory no-scrollbar scroll-smooth"
         >
           {images.map((image, index) => (
-            <div
+            <button
               key={image.id}
+              type="button"
               onClick={() => setActiveIndex(index)}
-              className="relative h-48 w-64 shrink-0 snap-start overflow-hidden rounded-2xl border border-slate-200/60 bg-slate-50 shadow-sm cursor-zoom-in group/item"
+              aria-label={`View enlarged photo ${index + 1} of ${images.length}`}
+              className="relative h-48 w-64 shrink-0 snap-start overflow-hidden rounded-2xl border border-slate-200/60 bg-slate-50 shadow-sm cursor-zoom-in group/item p-0 text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-[#b85c38]"
             >
               <Image
                 src={image.publicUrl}
                 alt={image.altText ?? listingName}
                 width={320}
                 height={240}
-                className="h-full w-full object-cover transition-transform duration-500 group-hover/item:scale-105"
+                className="h-full w-full object-cover transition-transform duration-500 group-hover/item:scale-105 pointer-events-none"
                 priority
               />
-            </div>
+            </button>
           ))}
         </div>
 
         {/* Left Arrow */}
         <button
+          type="button"
           onClick={() => scroll('left')}
-          className={`absolute left-2 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-white text-slate-800 shadow-md border border-slate-200/50 flex items-center justify-center hover:scale-110 active:scale-95 transition-all z-10 duration-200
-            ${showLeft ? 'opacity-90 hover:opacity-100 cursor-pointer' : 'opacity-0 pointer-events-none'}
+          className={`absolute left-2 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-white text-slate-800 shadow-md border border-slate-200/50 flex items-center justify-center hover:scale-110 active:scale-95 transition-all z-10 duration-200 cursor-pointer
+            ${showLeft ? 'opacity-90 hover:opacity-100' : 'opacity-0 pointer-events-none'}
           `}
           aria-label="Scroll left"
         >
@@ -157,9 +160,10 @@ export function PhotosCarousel({ images, listingName }: PhotosCarouselProps) {
 
         {/* Right Arrow */}
         <button
+          type="button"
           onClick={() => scroll('right')}
-          className={`absolute right-2 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-white text-slate-800 shadow-md border border-slate-200/50 flex items-center justify-center hover:scale-110 active:scale-95 transition-all z-10 duration-200
-            ${showRight ? 'opacity-90 hover:opacity-100 cursor-pointer' : 'opacity-0 pointer-events-none'}
+          className={`absolute right-2 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-white text-slate-800 shadow-md border border-slate-200/50 flex items-center justify-center hover:scale-110 active:scale-95 transition-all z-10 duration-200 cursor-pointer
+            ${showRight ? 'opacity-90 hover:opacity-100' : 'opacity-0 pointer-events-none'}
           `}
           aria-label="Scroll right"
         >
@@ -170,60 +174,66 @@ export function PhotosCarousel({ images, listingName }: PhotosCarouselProps) {
       {/* Dimmed Lightbox Image Viewer Modal */}
       {mounted && activeIndex !== null && createPortal(
         <div
-          className="fixed inset-0 bg-black/70 backdrop-blur-sm z-[9999] flex flex-col items-center justify-center transition-all duration-300"
+          className="fixed inset-0 bg-black/85 backdrop-blur-md z-[9999] flex flex-col items-center justify-center transition-all duration-300 p-4"
           onClick={() => setActiveIndex(null)}
+          role="dialog"
+          aria-modal="true"
+          aria-label="Enlarged photo preview"
         >
           {/* Close button */}
           <button
+            type="button"
             onClick={() => setActiveIndex(null)}
-            className="absolute top-4 right-4 text-white/80 hover:text-white hover:bg-white/10 p-2.5 rounded-full transition-all cursor-pointer z-10"
-            aria-label="Close image viewer"
+            className="absolute top-4 right-4 text-white bg-black/40 hover:bg-white/20 p-2.5 rounded-full transition-all cursor-pointer z-20 border border-white/20 active:scale-95"
+            aria-label="Close photo viewer"
           >
-            <X size={28} />
+            <X size={26} />
           </button>
 
           {/* Main Image container */}
           <div
-            className="relative flex items-center justify-center animate-in fade-in zoom-in-95 duration-200"
+            className="relative flex items-center justify-center max-w-[95vw] max-h-[82vh] animate-in fade-in zoom-in-95 duration-200"
             onClick={(e) => e.stopPropagation()}
           >
             <img
               src={images[activeIndex].publicUrl}
               alt={images[activeIndex].altText ?? listingName}
-              className="max-w-[90vw] max-h-[80vh] object-contain rounded-xl shadow-2xl select-none"
+              className="max-w-[95vw] max-h-[80vh] object-contain rounded-xl shadow-2xl select-none"
             />
           </div>
 
           {/* Image indicator count (e.g. 1 / 3) */}
-          <div className="mt-4 text-sm font-semibold text-white/60 select-none">
+          <div className="mt-3 text-sm font-semibold text-white/80 bg-black/40 px-3 py-1 rounded-full border border-white/10 select-none">
             {activeIndex + 1} / {images.length}
           </div>
 
           {/* Modal Left Arrow navigation */}
           {images.length > 1 && (
             <button
+              type="button"
               onClick={(e) => {
                 e.stopPropagation();
                 setActiveIndex((prev) => (prev !== null ? (prev - 1 + images.length) % images.length : null));
               }}
-              className="absolute left-4 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center hover:scale-105 active:scale-95 transition-all cursor-pointer z-10"
+              className="absolute left-2 sm:left-4 top-1/2 -translate-y-1/2 w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-black/40 sm:bg-white/10 hover:bg-white/25 text-white flex items-center justify-center hover:scale-105 active:scale-95 transition-all cursor-pointer z-10 border border-white/20"
               aria-label="Previous image"
             >
-              <ChevronLeft size={28} className="stroke-[2.5]" />
+              <ChevronLeft size={24} className="stroke-[2.5]" />
             </button>
           )}
 
           {/* Modal Right Arrow navigation */}
           {images.length > 1 && (
             <button
+              type="button"
               onClick={(e) => {
                 e.stopPropagation();
                 setActiveIndex((prev) => (prev !== null ? (prev + 1) % images.length : null));
               }}
-              className="absolute right-4 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center hover:scale-105 active:scale-95 transition-all cursor-pointer z-10"
+              className="absolute right-2 sm:right-4 top-1/2 -translate-y-1/2 w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-black/40 sm:bg-white/10 hover:bg-white/25 text-white flex items-center justify-center hover:scale-105 active:scale-95 transition-all cursor-pointer z-10 border border-white/20"
               aria-label="Next image"
             >
-              <ChevronRight size={28} className="stroke-[2.5]" />
+              <ChevronRight size={24} className="stroke-[2.5]" />
             </button>
           )}
         </div>,

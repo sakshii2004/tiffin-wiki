@@ -32,26 +32,31 @@ export function SearchBar({ defaultCity = '', defaultQ = '', disableScaleOnFocus
 
   return (
     <form 
+      action="/search"
+      method="GET"
       onSubmit={handleSubmit} 
-      className={`w-full bg-white rounded-full shadow-[0_2px_8px_rgba(0,0,0,0.05)] border border-[#e2e8f0] flex items-center p-1 pl-3.5 gap-2 transition-all duration-300 ease-out focus-within:shadow-[0_4px_16px_rgba(0,0,0,0.08)] focus-within:border-[#cbd5e1]${disableScaleOnFocus ? '' : ' focus-within:scale-[1.015]'}`}
+      className={`w-full bg-white rounded-full shadow-[0_2px_8px_rgba(0,0,0,0.05)] border border-[#e2e8f0] flex items-center p-1 pl-3 sm:pl-3.5 gap-1.5 sm:gap-2 transition-all duration-300 ease-out focus-within:shadow-[0_4px_16px_rgba(0,0,0,0.08)] focus-within:border-[#cbd5e1]${disableScaleOnFocus ? '' : ' focus-within:scale-[1.015]'}`}
     >
       <span className="text-[#94a3b8] shrink-0">
-        <MapPin size={18} />
+        <MapPin size={16} />
       </span>
       <input
         type="text"
+        name="q"
         placeholder="Search area or city..."
-        className="flex-1 border-none outline-none text-sm text-[#0f172a] bg-transparent placeholder-[#94a3b8] focus:ring-0 p-0"
+        className="min-w-0 flex-1 border-none outline-none text-xs sm:text-sm text-[#0f172a] bg-transparent placeholder-[#94a3b8] focus:ring-0 p-0"
         value={searchQuery}
         onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearchQuery(e.target.value)}
       />
-      <div className="w-px h-6 bg-[#e2e8f0] mx-0.5 shrink-0" />
+      <div className="w-px h-5 sm:h-6 bg-[#e2e8f0] mx-0.5 shrink-0" />
       <button
         type="submit"
-        className="bg-[#0f172a] text-white hover:bg-slate-800 transition-colors border-none rounded-full px-4 py-1.5 font-medium text-xs md:text-sm flex items-center gap-1.5 cursor-pointer shrink-0 focus:outline-none focus:ring-2 focus:ring-[#b85c38] focus:ring-offset-2"
+        aria-label="Find tiffins"
+        className="bg-[#0f172a] text-white hover:bg-slate-800 transition-colors border-none rounded-full px-2.5 sm:px-4 py-1.5 font-medium text-xs md:text-sm flex items-center gap-1.5 cursor-pointer shrink-0 focus:outline-none focus:ring-2 focus:ring-[#b85c38] focus:ring-offset-2"
       >
         <Search size={14} />
-        <span>Find Tiffins</span>
+        <span className="hidden sm:inline">Find Tiffins</span>
+        <span className="sm:hidden text-[11px]">Search</span>
       </button>
     </form>
   );

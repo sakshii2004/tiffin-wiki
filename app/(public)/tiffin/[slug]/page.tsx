@@ -1,5 +1,4 @@
 import type { Metadata } from 'next';
-import Image from 'next/image';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { prisma } from '@/lib/prisma';
@@ -14,9 +13,10 @@ import { StarRatingDisplay } from '@/components/ui/StarRatingDisplay';
 import { ShowNumberButton } from '@/components/ui/ShowNumberButton';
 import { ReviewCard } from '@/components/listing/ReviewCard';
 import { PhotosCarousel } from '@/components/listing/PhotosCarousel';
+import { WriteReviewButton } from '@/components/listing/WriteReviewButton';
 import { SearchParamToast } from '@/components/ui/SearchParamToast';
 import { toTitleCase } from '@/lib/titleCase';
-import { Info, MapPin } from 'lucide-react';
+import { MapPin } from 'lucide-react';
 
 export async function generateStaticParams() {
   const listings = await prisma.tiffinService.findMany({
@@ -314,12 +314,90 @@ export default async function TiffinDetailPage({ params, searchParams }: DetailP
                     <p className="text-sm text-slate-500 font-medium">Reach out to the provider directly on WhatsApp.</p>
                   </div>
                   <div className="shrink-0 w-full sm:w-auto">
-                    <ShowNumberButton whatsappNumber={listing.whatsappNumber} />
+                    <ShowNumberButton serviceId={listing.id} serviceSlug={listing.slug} />
                   </div>
                 </div>
               </section>
 
-              {/* About the Service Card */}
+              {/* 2. ON MOBILE ONLY: Photos and Offerings immediately follow Hero */}
+              <div className="lg:hidden flex flex-col gap-8">
+                <PhotosCarousel images={listing.images} listingName={listing.name} />
+
+                <div className="flex flex-col gap-4">
+                  <h2 className="text-xl font-bold text-body">Offerings &amp; Pricing</h2>
+
+                  {listing.offerings && listing.offerings.length > 0 ? (
+                    <div className="flex flex-col gap-4">
+                      {(() => {
+                        const daysPerWeek = listing.operationalDays.length > 0 ? listing.operationalDays.length : 6;
+                        const daysPerMonth = Math.round(daysPerWeek * 4.33);
+
+                        return listing.offerings.map((offering) => (
+                          <div
+                            key={offering.id}
+                            className="group relative overflow-hidden rounded-xl border border-slate-200 bg-white p-4 pb-6 shadow-sm hover:shadow-md hover:border-brand-peridot/40 transition-all duration-300 flex flex-col gap-3 shrink-0"
+                          >
+                            <div className="absolute top-0 left-0 w-1 h-full bg-brand-peridot/0 group-hover:bg-brand-peridot/80 transition-colors duration-300" />
+
+                            <div className="flex flex-col gap-2.5">
+                              <span className="font-extrabold text-body text-base leading-tight">{offering.sizeName}</span>
+
+                              <div className="flex flex-col gap-1 border-l-2 border-slate-100 pl-2.5">
+                                {offering.pricePerMeal != null ? (
+                                  <div className="text-sm font-bold text-slate-800 flex items-baseline gap-1">
+                                    ₹{offering.pricePerMeal} <span className="text-[11px] text-slate-500 font-medium">/ meal</span>
+                                  </div>
+                                ) : offering.searchPricePerMeal != null ? (
+                                  <div
+                                    className="text-sm font-bold text-slate-500 flex items-center gap-1.5 select-none cursor-help"
+                                    title={`Estimated from ₹${offering.pricePerMonth}/month divided by ${daysPerMonth} operational days/month.`}
+                                  >
+                                    <span>~₹{offering.searchPricePerMeal}</span>
+                                    <span className="text-[11px] text-slate-400 font-medium">/ meal</span>
+                                    <span className="text-[9px] bg-slate-100 text-slate-500 px-1 py-0.5 rounded font-bold uppercase tracking-wider">Est.</span>
+                                  </div>
+                                ) : null}
+
+                                {offering.pricePerMonth != null ? (
+                                  <div className="text-sm font-bold text-slate-800 flex items-baseline gap-1">
+                                    ₹{offering.pricePerMonth} <span className="text-[11px] text-slate-500 font-medium">/ month</span>
+                                  </div>
+                                ) : offering.searchPricePerMonth != null ? (
+                                  <div
+                                    className="text-sm font-bold text-slate-500 flex items-center gap-1.5 select-none cursor-help"
+                                    title={`Estimated from ₹${offering.pricePerMeal}/meal multiplied by ${daysPerMonth} operational days/month.`}
+                                  >
+                                    <span>~₹{offering.searchPricePerMonth}</span>
+                                    <span className="text-[11px] text-slate-400 font-medium">/ month</span>
+                                    <span className="text-[9px] bg-slate-100 text-slate-500 px-1 py-0.5 rounded font-bold uppercase tracking-wider">Est.</span>
+                                  </div>
+                                ) : null}
+                              </div>
+                            </div>
+
+                            {offering.mealComponents.length > 0 && (
+                              <div className="flex flex-wrap gap-1.5 mt-0.5">
+                                {offering.mealComponents.map((comp) => (
+                                  <Badge key={comp} variant="brand" className="text-[10px] px-2 py-0.5 hover:bg-brand-peridot/20 transition-colors font-medium">
+                                    {toTitleCase(comp)}
+                                  </Badge>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                        ));
+                      })()}
+                    </div>
+                  ) : (
+                    <div className="rounded-xl border border-dashed border-slate-200 bg-slate-50/50 p-6 text-center text-slate-500 text-sm">
+                      No offerings listed.
+                    </div>
+                  )}
+                  <div className="h-[3px] bg-[#0f172a] rounded-full w-full shrink-0 -mt-2" />
+                </div>
+              </div>
+
+              {/* 3. Service Details Card */}
               {(listing.description || listing.containerType || listing.spiceLevel || listing.requiresTiffinWash != null) && (
                 <section aria-labelledby="about-heading" className="rounded-2xl border border-slate-200/80 bg-white p-6 sm:p-7 shadow-sm flex flex-col gap-5">
                   <h2 id="about-heading" className="text-lg font-bold text-body">
@@ -357,7 +435,7 @@ export default async function TiffinDetailPage({ params, searchParams }: DetailP
                 </section>
               )}
 
-              {/* Reviews Section */}
+              {/* 4. Reviews Section */}
               <section aria-labelledby="reviews-heading" className="flex flex-col gap-6">
                 <div className="flex flex-wrap items-center justify-between gap-4">
                   <div className="flex items-center gap-3">
@@ -365,9 +443,7 @@ export default async function TiffinDetailPage({ params, searchParams }: DetailP
                       Reviews <span className="text-slate-400 font-medium text-lg ml-1">({reviewCount})</span>
                     </h2>
                   </div>
-                  <Button href={`/tiffin/${listing.slug}/review`} variant="secondary" className="shadow-sm border-slate-200">
-                    Write a Review
-                  </Button>
+                  <WriteReviewButton slug={listing.slug} className="shadow-sm border-slate-200" />
                 </div>
 
                 {/* Reviews Breakdown Block */}
@@ -428,7 +504,7 @@ export default async function TiffinDetailPage({ params, searchParams }: DetailP
                 )}
               </section>
 
-              {/* Add a listing nudge */}
+              {/* 5. Add a listing nudge */}
               <section className="rounded-2xl border border-brand-peridot/20 bg-gradient-to-br from-brand-peridot/10 to-transparent px-6 py-10 text-center flex flex-col items-center gap-5 mt-4">
                 <div className="flex flex-col gap-1">
                   <h3 className="text-lg font-bold text-slate-800">
@@ -444,15 +520,15 @@ export default async function TiffinDetailPage({ params, searchParams }: DetailP
               </section>
             </div>
 
-            {/* RIGHT COLUMN: 2/6 (Offerings & Pricing) */}
-            <div className="lg:col-span-2 relative">
-              {/* Sticky wrapper restricting height so the inner container can scroll */}
+            {/* RIGHT COLUMN: 2/6 (Desktop Sticky Photos & Offerings) */}
+            <div className="hidden lg:block lg:col-span-2 relative">
+              {/* Sticky wrapper restricting height so the inner container can scroll on desktop */}
               <div className="sticky top-24 flex flex-col gap-6 max-h-[calc(100vh-7rem)]">
 
                 <PhotosCarousel images={listing.images} listingName={listing.name} />
 
                 <div className="flex items-center gap-2 shrink-0">
-                  <h2 className="text-xl font-bold text-body">Offerings & Pricing</h2>
+                  <h2 className="text-xl font-bold text-body">Offerings &amp; Pricing</h2>
                 </div>
 
                 {listing.offerings && listing.offerings.length > 0 ? (

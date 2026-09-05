@@ -6,7 +6,7 @@ const e164Phone = z
   .string()
   .regex(/^\d{10}$/, 'Must be a valid 10-digit phone number (e.g. 9876543210)');
 
-const indianCities = [
+export const INDIAN_CITIES = [
   'mumbai', 'delhi', 'bangalore', 'hyderabad',
   'pune', 'chennai', 'ahmedabad', 'kolkata', 'other',
 ] as const;
@@ -74,15 +74,70 @@ export const ReviewSchema = z.object({
 
 export type ReviewInput = z.infer<typeof ReviewSchema>;
 
+// --- CuidParamSchema ---
+// Used for validating route params in API endpoints and admin pages
+export const CuidParamSchema = z.string().cuid('Invalid ID format');
+
 // --- PresignSchema ---
 // Used in: /app/api/upload/presign/route.ts
+export const ALLOWED_IMAGE_EXTENSIONS = ['.jpg', '.jpeg', '.png', '.webp'] as const;
+export const ALLOWED_IMAGE_MIMES = ['image/jpeg', 'image/png', 'image/webp'] as const;
+
 export const PresignSchema = z.object({
-  filename: z.string().min(1).max(200),
-  contentType: z.string().regex(/^image\//, 'Only image files are allowed'),
+  filename: z
+    .string()
+    .min(1)
+    .max(200)
+    .refine(
+      (name) => {
+        const lower = name.toLowerCase();
+        return ALLOWED_IMAGE_EXTENSIONS.some((ext) => lower.endsWith(ext));
+      },
+      { message: 'Only .jpg, .jpeg, .png, and .webp file extensions are allowed' },
+    ),
+  contentType: z.enum(ALLOWED_IMAGE_MIMES, {
+    error: 'Only JPEG, PNG, and WebP image formats are allowed',
+  }),
   context: z.enum(['listing', 'review']),
 });
 
 export type PresignInput = z.infer<typeof PresignSchema>;
+
+// --- TelemetryEventSchema ---
+// Used in: /app/api/telemetry/route.ts
+export const TelemetryEventTypeEnum = z.enum([
+  'PAGE_VIEW',
+  'TIME_SPENT',
+  'SEARCH_EXECUTE',
+  'FILTER_TOGGLE',
+  'WHATSAPP_REVEAL',
+  'WHATSAPP_OPEN',
+  'REVIEW_BUTTON_CLICK',
+  'REVIEW_SUBMIT_SUCCESS',
+  'ADD_LISTING_SUCCESS',
+  'LISTING_SUBMITTED',
+  'REVIEW_SUBMITTED',
+  'PAGE_EXIT',
+]);
+
+export const TelemetryEventSchema = z.object({
+  sessionId: z.string().min(1).max(128),
+  eventType: TelemetryEventTypeEnum,
+  pathname: z.string().max(250).default('/'),
+  searchQuery: z.string().max(150).optional().nullable(),
+  city: z.string().max(80).optional().nullable(),
+  listingId: z.string().max(50).optional().nullable(),
+  listingSlug: z.string().max(150).optional().nullable(),
+  ctaName: z.string().max(80).optional().nullable(),
+  filterName: z.string().max(80).optional().nullable(),
+  filterValue: z.string().max(80).optional().nullable(),
+  durationSec: z.number().int().min(0).max(86400).optional().nullable(),
+  rating: z.number().int().min(1).max(5).optional().nullable(),
+  deviceType: z.string().max(30).optional().nullable(),
+  referrer: z.string().max(500).optional().nullable(),
+});
+
+export type TelemetryEventInput = z.infer<typeof TelemetryEventSchema>;
 
 // --- SearchSchema ---
 // Used in: /app/(public)/search/page.tsx

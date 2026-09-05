@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { getClientIp, hashIp, RateLimiters } from '@/lib/rateLimit';
+import { TelemetryEventSchema } from '@/lib/validations';
+
+const MAX_BATCH_SIZE = 50;
 
 export async function POST(req: NextRequest) {
   try {
@@ -35,40 +38,46 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ success: true, count: 0 }, { status: 200 });
     }
 
-    let payload: any = null;
+    let payload: unknown = null;
     try {
       payload = JSON.parse(text);
     } catch {
       return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 });
     }
 
-    const eventsList = Array.isArray(payload) ? payload : [payload];
+    const rawList = Array.isArray(payload) ? payload.slice(0, MAX_BATCH_SIZE) : [payload];
 
-    const records = eventsList
-      .filter((e) => e && typeof e === 'object' && e.eventType && e.sessionId)
-      .filter((e) => {
-        const path = String(e.pathname || '/');
-        return !path.startsWith('/admin') && !path.startsWith('/api');
-      })
-      .map((e) => ({
-        sessionId: String(e.sessionId),
-        eventType: String(e.eventType),
-        pathname: String(e.pathname || '/'),
-        searchQuery: e.searchQuery ? String(e.searchQuery) : null,
-        city: e.city ? String(e.city) : null,
-        listingId: e.listingId ? String(e.listingId) : null,
-        listingSlug: e.listingSlug ? String(e.listingSlug) : null,
-        ctaName: e.ctaName ? String(e.ctaName) : null,
-        filterName: e.filterName ? String(e.filterName) : null,
-        filterValue: e.filterValue ? String(e.filterValue) : null,
-        durationSec: typeof e.durationSec === 'number' ? Math.round(e.durationSec) : null,
-        rating: typeof e.rating === 'number' ? Math.round(e.rating) : null,
-        deviceType: e.deviceType ? String(e.deviceType) : null,
+    const records = [];
+    for (const item of rawList) {
+      const parsed = TelemetryEventSchema.safeParse(item);
+      if (!parsed.success) continue;
+
+      const data = parsed.data;
+      const path = data.pathname || '/';
+      if (path.startsWith('/admin') || path.startsWith('/api')) {
+        continue;
+      }
+
+      records.push({
+        sessionId: data.sessionId,
+        eventType: data.eventType,
+        pathname: path,
+        searchQuery: data.searchQuery ?? null,
+        city: data.city ?? null,
+        listingId: data.listingId ?? null,
+        listingSlug: data.listingSlug ?? null,
+        ctaName: data.ctaName ?? null,
+        filterName: data.filterName ?? null,
+        filterValue: data.filterValue ?? null,
+        durationSec: data.durationSec ?? null,
+        rating: data.rating ?? null,
+        deviceType: data.deviceType ?? null,
         ipHash,
         country,
         geoCity,
-        referrer: e.referrer ? String(e.referrer) : null,
-      }));
+        referrer: data.referrer ?? null,
+      });
+    }
 
     if (records.length > 0) {
       await prisma.telemetryEvent.createMany({

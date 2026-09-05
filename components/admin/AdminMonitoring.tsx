@@ -716,6 +716,32 @@ export function AdminMonitoring({ data }: AdminMonitoringProps) {
                   </div>
                 </div>
               </div>
+
+              {/* Additional Filter Breakdown */}
+              {(data.filtersBreakdown.topMeals.length > 0 ||
+                data.filtersBreakdown.topContainers.length > 0 ||
+                data.filtersBreakdown.topSpices.length > 0) && (
+                <div className="space-y-3 border-t border-slate-800 pt-4 font-mono text-xs">
+                  <span className="text-xs text-slate-400 font-semibold uppercase tracking-wider">Top Filtered Attributes</span>
+                  <div className="flex flex-wrap gap-1.5 pt-1">
+                    {data.filtersBreakdown.topMeals.map((m) => (
+                      <span key={m.meal} className="px-2.5 py-1 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-300">
+                        {toTitleCase(m.meal)}: <strong className="text-emerald-400">{m.count}</strong>
+                      </span>
+                    ))}
+                    {data.filtersBreakdown.topContainers.map((c) => (
+                      <span key={c.type} className="px-2.5 py-1 rounded-lg bg-teal-500/10 border border-teal-500/20 text-teal-300">
+                        {toTitleCase(c.type)}: <strong className="text-teal-400">{c.count}</strong>
+                      </span>
+                    ))}
+                    {data.filtersBreakdown.topSpices.map((s) => (
+                      <span key={s.level} className="px-2.5 py-1 rounded-lg bg-amber-500/10 border border-amber-500/20 text-amber-300">
+                        {toTitleCase(s.level)} Spice: <strong className="text-amber-400">{s.count}</strong>
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
 
           </div>
@@ -868,9 +894,9 @@ export function AdminMonitoring({ data }: AdminMonitoringProps) {
         <div className="rounded-2xl border border-emerald-500/30 bg-slate-950 p-6 space-y-4 shadow-[0_0_30px_rgba(0,0,0,0.5)] font-mono">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-800 pb-4">
             <div className="flex items-center gap-2">
-              <div className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-ping" />
+              <div className="w-2.5 h-2.5 rounded-full bg-emerald-400" />
               <h3 className="text-sm font-bold uppercase tracking-wider text-emerald-400 flex items-center gap-2">
-                Real-Time Event Stream Log
+                Recent Event Stream Log
               </h3>
             </div>
 

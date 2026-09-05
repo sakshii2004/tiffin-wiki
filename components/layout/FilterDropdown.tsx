@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect, ReactNode } from 'react';
-import { ChevronDown } from 'lucide-react';
+import { ChevronDown, X } from 'lucide-react';
 import { cn } from '@/lib/cn';
 import { FOCUS_RING } from '@/components/ui/styles';
 
@@ -28,16 +28,18 @@ export function FilterDropdown({
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    function handleClickOutside(event: MouseEvent) {
+    function handleClickOutside(event: MouseEvent | TouchEvent) {
       if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
         setIsOpen(false);
       }
     }
     if (isOpen) {
       document.addEventListener('mousedown', handleClickOutside);
+      document.addEventListener('touchstart', handleClickOutside, { passive: true });
     }
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('touchstart', handleClickOutside);
     };
   }, [isOpen]);
 
@@ -48,12 +50,12 @@ export function FilterDropdown({
   };
 
   return (
-    <div className="relative inline-block text-left w-auto lg:w-full" ref={containerRef}>
+    <div className="relative inline-block text-left w-auto lg:w-full shrink-0" ref={containerRef}>
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
         className={cn(
-          'inline-flex min-h-[34px] items-center justify-between gap-1.5 rounded-full border px-3.5 py-1 text-xs font-semibold transition-all shadow-[0_1px_2px_rgba(0,0,0,0.02)] select-none bg-white cursor-pointer w-full',
+          'inline-flex min-h-[34px] items-center justify-between gap-1.5 rounded-full border px-3.5 py-1 text-xs font-semibold transition-all shadow-[0_1px_2px_rgba(0,0,0,0.02)] select-none bg-white cursor-pointer w-full whitespace-nowrap',
           FOCUS_RING,
           isActive
             ? activeColorClasses[activeColor]
@@ -74,9 +76,36 @@ export function FilterDropdown({
       </button>
 
       {isOpen && (
-        <div className="absolute left-0 mt-2 z-50 min-w-[220px] max-h-72 overflow-y-auto rounded-2xl border border-slate-200 bg-white p-3 shadow-lg focus:outline-none text-sm animate-in fade-in-50 slide-in-from-top-1 duration-150">
-          {typeof children === 'function' ? children(() => setIsOpen(false)) : children}
-        </div>
+        <>
+          {/* Mobile Bottom-Sheet Modal (< lg) */}
+          <div className="lg:hidden fixed inset-0 z-[9999] flex flex-col justify-end bg-black/60 backdrop-blur-xs p-0 animate-in fade-in duration-150">
+            <div className="absolute inset-0" onClick={() => setIsOpen(false)} />
+            <div className="relative z-10 w-full max-h-[80vh] flex flex-col rounded-t-3xl bg-white p-5 shadow-2xl animate-in slide-in-from-bottom-4 duration-200">
+              <div className="flex items-center justify-between pb-3 border-b border-slate-100 mb-4">
+                <span className="font-bold text-base text-slate-800 flex items-center gap-2">
+                  {icon}
+                  {label}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setIsOpen(false)}
+                  className="p-1 rounded-full text-slate-400 hover:text-slate-600 hover:bg-slate-100 cursor-pointer"
+                  aria-label="Close"
+                >
+                  <X size={20} />
+                </button>
+              </div>
+              <div className="overflow-y-auto flex-1 pb-2">
+                {typeof children === 'function' ? children(() => setIsOpen(false)) : children}
+              </div>
+            </div>
+          </div>
+
+          {/* Desktop Absolute Popover (lg:) */}
+          <div className="hidden lg:block absolute left-0 mt-2 z-50 min-w-[220px] max-h-72 overflow-y-auto rounded-2xl border border-slate-200 bg-white p-3 shadow-lg focus:outline-none text-sm animate-in fade-in-50 slide-in-from-top-1 duration-150">
+            {typeof children === 'function' ? children(() => setIsOpen(false)) : children}
+          </div>
+        </>
       )}
     </div>
   );

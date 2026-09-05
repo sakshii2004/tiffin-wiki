@@ -36,8 +36,45 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       }
       return session;
     },
+    /**
+     * Defense-in-depth against open redirect attacks:
+     * Only allow relative paths or same-origin URLs.
+     */
+    async redirect({ url, baseUrl }) {
+      if (url.startsWith('/') && !url.startsWith('//') && !url.startsWith('/\\')) {
+        return `${baseUrl}${url}`;
+      }
+      try {
+        if (new URL(url).origin === baseUrl) {
+          return url;
+        }
+      } catch {
+        // Invalid URL
+      }
+      return baseUrl;
+    },
   },
   pages: {
     signIn: '/login',
   },
+  trustHost: true,
 });
+
+/**
+ * Sanitizes a redirect URL ensuring it is strictly a safe relative path.
+ * Disallows absolute URLs, protocol-relative ('//'), and backslash tricks ('/\').
+ */
+export function getSafeRedirectUrl(url?: string | null): string {
+  if (!url) return '/';
+  const trimmed = url.trim();
+  if (trimmed.startsWith('/') && !trimmed.startsWith('//') && !trimmed.startsWith('/\\')) {
+    return trimmed;
+  }
+  return '/';
+}
+
+export function isAdminEmail(email: string | null | undefined): boolean {
+  if (!email || !process.env.ADMIN_EMAIL) return false;
+  return email.trim().toLowerCase() === process.env.ADMIN_EMAIL.trim().toLowerCase();
+}
+

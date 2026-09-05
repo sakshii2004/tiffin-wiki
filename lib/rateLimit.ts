@@ -122,6 +122,10 @@ export const RateLimiters = {
   /** Listing submission burst protection: 2 per minute per IP */
   listingBurst: (ipHash: string) =>
     checkSlidingWindowRateLimit(`listing_burst:${ipHash}`, 2, 60 * 1000),
+
+  /** WhatsApp phone reveal anti-scraping: 30 reveals per 10 minutes per IP */
+  phoneReveal: (ipHash: string) =>
+    checkSlidingWindowRateLimit(`reveal:${ipHash}`, 30, 10 * 60 * 1000),
 };
 
 /**

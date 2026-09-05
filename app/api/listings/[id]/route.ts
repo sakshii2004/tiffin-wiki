@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { revalidatePath } from 'next/cache';
-import { auth } from '@/lib/auth';
-import { AdminEditSchema } from '@/lib/validations';
+import { auth, isAdminEmail } from '@/lib/auth';
+import { AdminEditSchema, CuidParamSchema } from '@/lib/validations';
 import { prisma } from '@/lib/prisma';
 import { computeSearchPrices } from '@/lib/searchPrices';
 
@@ -11,8 +11,12 @@ export async function PATCH(
 ) {
   const { id } = await params;
 
+  if (!CuidParamSchema.safeParse(id).success) {
+    return NextResponse.json({ error: 'Invalid listing ID format' }, { status: 400 });
+  }
+
   const session = await auth();
-  if (!session?.user?.email || session.user.email !== process.env.ADMIN_EMAIL) {
+  if (!session?.user?.email || !isAdminEmail(session.user.email)) {
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
   }
 
@@ -75,8 +79,12 @@ export async function DELETE(
 ) {
   const { id } = await params;
 
+  if (!CuidParamSchema.safeParse(id).success) {
+    return NextResponse.json({ error: 'Invalid listing ID format' }, { status: 400 });
+  }
+
   const session = await auth();
-  if (!session?.user?.email || session.user.email !== process.env.ADMIN_EMAIL) {
+  if (!session?.user?.email || !isAdminEmail(session.user.email)) {
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
   }
 

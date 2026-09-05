@@ -198,7 +198,7 @@ export function ImageUploader({
         <input
           ref={inputRef}
           type="file"
-          accept="image/*"
+          accept="image/jpeg,image/png,image/webp"
           multiple
           onChange={handleSelect}
           disabled={files.length >= maxFiles}

@@ -87,21 +87,21 @@ Your existing OAuth Client ID (`AUTH_GOOGLE_ID`) needs to permit your live produ
 
 Set these values in the **Vercel Project Settings > Environment Variables** (select **Production** environment):
 
-| Variable | Current Dev Value | Action Needed for Production |
+| Variable | Example Value / Format | Action Needed for Production |
 | :--- | :--- | :--- |
-| `DATABASE_URL` | `postgresql://...aoijbltn-pooler...` | **Update** with the new **Pooled** connection string from your fresh prod Neon DB. |
-| `DIRECT_URL` | `postgresql://...aoijbltn...` | **Update** with the new **Direct** (non-pooled) connection string from your fresh prod Neon DB. |
-| `AUTH_SECRET` | `UhqLfgGN0+/P+0xXlMo441yr0SR6LLDtoGGccpqzciw=` | **Keep as is** (or run `openssl rand -base64 32` if you prefer a separate prod secret). |
-| `AUTH_URL` | `http://localhost:3000` | **Change to:** `https://tiffin.wiki` |
-| `AUTH_GOOGLE_ID` | `592748388397-6j6v0iefofke8...` | **Keep as is** (after updating Redirect URIs in Google Console above). |
-| `AUTH_GOOGLE_SECRET` | `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` | **Keep as is**. |
-| `ADMIN_EMAIL` | `sakshisah0511@gmail.com` | **Keep as is** (Google account authorized to access `/admin`). |
-| `R2_ENDPOINT` | `https://bf4a2e585b16f463367a906b3391f5db.r2.cloudflarestorage.com` | **Keep as is**. |
-| `R2_ACCESS_KEY_ID` | `f98b20883503d5d5abde816e1200914d` | **Keep as is**. |
-| `R2_SECRET_ACCESS_KEY` | `e165d5f984bbf307b194f1cdec714eb3d...` | **Keep as is**. |
-| `R2_BUCKET_NAME` | `tiffin-wiki-images` | **Keep as is**. |
-| `R2_PUBLIC_URL` | `https://pub-2261792796b646a1bb962427d7c700be.r2.dev` | **Keep as is** (or change to `https://images.tiffin.wiki` if you hooked up the custom domain). |
-| `NODE_ENV` | *(Not set locally)* | **Set to:** `production` |
+| `DATABASE_URL` | `postgresql://neondb_owner:<PASSWORD>@<PROD_HOST>-pooler.neondb.tech/<DB_NAME>?sslmode=require` | **Set** to the **Pooled** connection string from your fresh prod Neon DB. |
+| `DIRECT_URL` | `postgresql://neondb_owner:<PASSWORD>@<PROD_HOST>.neondb.tech/<DB_NAME>?sslmode=require` | **Set** to the **Direct** (non-pooled) connection string from your fresh prod Neon DB. |
+| `AUTH_SECRET` | `<GENERATE_WITH_OPENSSL_RAND_BASE64_32>` | **Generate** a secure secret via `openssl rand -base64 32`. |
+| `AUTH_URL` | `https://tiffin.wiki` | **Set to:** `https://tiffin.wiki` (or `http://localhost:3000` for local dev). |
+| `AUTH_GOOGLE_ID` | `<YOUR_GOOGLE_CLIENT_ID>.apps.googleusercontent.com` | **Set** to your Google Cloud Console OAuth 2.0 Client ID. |
+| `AUTH_GOOGLE_SECRET` | `<YOUR_GOOGLE_CLIENT_SECRET>` | **Set** to your Google Cloud Console OAuth 2.0 Client Secret. |
+| `ADMIN_EMAIL` | `<YOUR_ADMIN_EMAIL@gmail.com>` | **Set** to the authorized admin Google email address. |
+| `R2_ENDPOINT` | `https://<ACCOUNT_ID>.r2.cloudflarestorage.com` | **Set** to your Cloudflare R2 S3 API endpoint. |
+| `R2_ACCESS_KEY_ID` | `<YOUR_R2_ACCESS_KEY_ID>` | **Set** to your Cloudflare R2 token Access Key ID. |
+| `R2_SECRET_ACCESS_KEY` | `<YOUR_R2_SECRET_ACCESS_KEY>` | **Set** to your Cloudflare R2 token Secret Access Key. |
+| `R2_BUCKET_NAME` | `tiffin-wiki-images` | **Set** to your Cloudflare R2 bucket name. |
+| `R2_PUBLIC_URL` | `https://pub-<BUCKET_HASH>.r2.dev` | **Set** to your public bucket URL (or custom domain `https://images.tiffin.wiki`). |
+| `NODE_ENV` | `production` | **Set to:** `production` |
 
 ---
 

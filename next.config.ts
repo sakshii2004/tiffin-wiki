@@ -28,6 +28,18 @@ const securityHeaders = [
     value: "camera=(), microphone=(), geolocation=()",
   },
   {
+    key: "Cross-Origin-Opener-Policy",
+    value: "same-origin",
+  },
+  {
+    key: "Cross-Origin-Resource-Policy",
+    value: "same-origin",
+  },
+  {
+    key: "X-Permitted-Cross-Domain-Policies",
+    value: "none",
+  },
+  {
     key: "Content-Security-Policy",
     value: [
       "default-src 'self'",
@@ -45,9 +57,9 @@ const securityHeaders = [
       // emitted in production builds, preserving XSS hardening.
       `script-src 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ""}`,
       "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
-      "font-src 'self' https://fonts.gstatic.com",
-      "img-src 'self' data: https://images.tiffin.wiki https://lh3.googleusercontent.com https://*.r2.dev",
-      "connect-src 'self' https://*.r2.cloudflarestorage.com", // R2 presigned PUT uploads
+      "font-src 'self' data: https://fonts.gstatic.com",
+      "img-src 'self' data: blob: https://images.tiffin.wiki https://lh3.googleusercontent.com https://*.r2.dev",
+      `connect-src 'self' ws: wss: https://*.r2.cloudflarestorage.com${isDev ? " http: https:" : ""}`,
       "frame-ancestors 'none'",
     ].join("; "),
   },
@@ -84,6 +96,13 @@ const nextConfig: NextConfig = {
       },
     ],
   },
+  allowedDevOrigins: [
+    "localhost",
+    "127.0.0.1",
+    "192.168.*",
+    "10.*",
+    "172.16.*",
+  ],
 };
 
 export default nextConfig;

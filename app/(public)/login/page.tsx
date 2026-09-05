@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import { Star, BookmarkCheck, Plus } from 'lucide-react';
-import { signIn } from '@/lib/auth';
+import { Star, Plus } from 'lucide-react';
+import { signIn, getSafeRedirectUrl } from '@/lib/auth';
 import { SiteHeader } from '@/components/layout/SiteHeader';
 import { SiteFooter } from '@/components/layout/SiteFooter';
 
@@ -16,10 +16,12 @@ interface LoginPageProps {
 export default async function LoginPage({ searchParams }: LoginPageProps) {
   const { callbackUrl, tab } = await searchParams;
   const isSignUp = tab === 'signup';
+  const safeCallbackUrl = getSafeRedirectUrl(callbackUrl);
+  const safeCallbackParam = safeCallbackUrl !== '/' ? `callbackUrl=${encodeURIComponent(safeCallbackUrl)}` : '';
 
   async function handleGoogleSignIn() {
     'use server';
-    await signIn('google', { redirectTo: callbackUrl ?? '/' });
+    await signIn('google', { redirectTo: safeCallbackUrl });
   }
 
   return (
@@ -38,7 +40,7 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
               {/* Tab switcher */}
               <div className="flex w-full rounded-full bg-[#f1f5f9] p-1 gap-1" role="tablist">
                 <Link
-                  href={callbackUrl ? `/login?callbackUrl=${encodeURIComponent(callbackUrl)}` : '/login'}
+                  href={safeCallbackParam ? `/login?${safeCallbackParam}` : '/login'}
                   role="tab"
                   aria-selected={!isSignUp}
                   className={`flex-1 text-center rounded-full py-1.5 text-sm font-semibold transition-all ${
@@ -50,7 +52,7 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
                   Sign in
                 </Link>
                 <Link
-                  href={callbackUrl ? `/login?tab=signup&callbackUrl=${encodeURIComponent(callbackUrl)}` : '/login?tab=signup'}
+                  href={safeCallbackParam ? `/login?tab=signup&${safeCallbackParam}` : '/login?tab=signup'}
                   role="tab"
                   aria-selected={isSignUp}
                   className={`flex-1 text-center rounded-full py-1.5 text-sm font-semibold transition-all ${
@@ -120,7 +122,7 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
                   <>
                     Already have an account?{' '}
                     <Link
-                      href={callbackUrl ? `/login?callbackUrl=${encodeURIComponent(callbackUrl)}` : '/login'}
+                      href={safeCallbackParam ? `/login?${safeCallbackParam}` : '/login'}
                       className="text-[#475569] font-medium hover:text-[#0f172a] transition-colors underline underline-offset-2"
                     >
                       Sign in
@@ -130,7 +132,7 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
                   <>
                     New here?{' '}
                     <Link
-                      href={callbackUrl ? `/login?tab=signup&callbackUrl=${encodeURIComponent(callbackUrl)}` : '/login?tab=signup'}
+                      href={safeCallbackParam ? `/login?tab=signup&${safeCallbackParam}` : '/login?tab=signup'}
                       className="text-[#475569] font-medium hover:text-[#0f172a] transition-colors underline underline-offset-2"
                     >
                       Create an account

@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { AdminActions } from '@/components/admin/AdminActions';
 import { AdminEditForm } from '@/components/admin/AdminEditForm';
 import { ArrowLeft } from 'lucide-react';
+import { CuidParamSchema } from '@/lib/validations';
 
 function StatusBadge({ status }: { status: string }) {
   const styles: Record<string, string> = {
@@ -48,6 +49,10 @@ export default async function AdminListingReviewPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
+
+  if (!CuidParamSchema.safeParse(id).success) {
+    notFound();
+  }
 
   const listing = await prisma.tiffinService.findUnique({
     where: { id },

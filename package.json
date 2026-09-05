@@ -31,6 +31,7 @@
     "react-dom": "19.2.4",
     "react-hook-form": "^7.77.0",
     "slugify": "^1.6.9",
+    "ws": "^8.21.3",
     "zod": "^4.4.3"
   },
   "devDependencies": {
@@ -38,6 +39,7 @@
     "@types/node": "^20.19.41",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "@types/ws": "^8.18.1",
     "eslint": "^9",
     "eslint-config-next": "16.2.7",
     "tailwindcss": "^4",

@@ -126,6 +126,10 @@ export function TelemetryProvider({ children }: { children: React.ReactNode }) {
     startTimeRef.current = Date.now();
     lastPathnameRef.current = currentPath;
 
+    // Extract listing slug from detail page paths like /tiffin/some-slug
+    const slugMatch = pathname.match(/^\/tiffin\/([^/]+)$/);
+    const listingSlug = slugMatch ? slugMatch[1] : undefined;
+
     // Track PAGE_VIEW for current page
     const city = searchParams?.get('city') || undefined;
     const q = searchParams?.get('q') || undefined;
@@ -133,15 +137,8 @@ export function TelemetryProvider({ children }: { children: React.ReactNode }) {
     sendEvent('PAGE_VIEW', {
       city: city || q,
       searchQuery: q,
+      listingSlug,
     });
-
-    // If on /search page or if search parameters exist, record SEARCH_EXECUTE
-    if (pathname === '/search' || q || city) {
-      sendEvent('SEARCH_EXECUTE', {
-        city: city || q,
-        searchQuery: q || city,
-      });
-    }
   }, [pathname, searchParams?.toString()]);
 
   // Track TIME_SPENT on window unload / tab hide
