@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { prisma } from '@/lib/prisma';
 import { getListingBySlug, computeAverageRating } from '@/lib/queries';
+import { getPublicUrl } from '@/lib/r2';
 import { SiteHeader } from '@/components/layout/SiteHeader';
 import { SiteFooter } from '@/components/layout/SiteFooter';
 import { Badge } from '@/components/ui/Badge';
@@ -72,7 +73,7 @@ export async function generateMetadata({ params }: DetailPageProps): Promise<Met
     .join(', ')
     .toLowerCase()} tiffin in ${areaDisplay}${cityDisplay}.${priceText}`;
   const canonicalUrl = `https://tiffin.wiki/tiffin/${slug}`;
-  const coverImage = listing.images?.[0]?.publicUrl;
+  const coverImage = listing.images?.[0] ? getPublicUrl(listing.images[0].r2Key) : null;
 
   return {
     title: pageTitle,
@@ -144,7 +145,7 @@ export default async function TiffinDetailPage({ params, searchParams }: DetailP
     '@type': 'LocalBusiness',
     name: listing.name,
     url: `https://tiffin.wiki/tiffin/${slug}`,
-    image: listing.images.map((img) => img.publicUrl),
+    image: listing.images.map((img) => getPublicUrl(img.r2Key)),
     servesCuisine: 'Indian',
     currenciesAccepted: 'INR',
     priceRange: cheapestMonthPrice ? `₹${cheapestMonthPrice}/month` : '₹₹',
@@ -167,6 +168,12 @@ export default async function TiffinDetailPage({ params, searchParams }: DetailP
       }
       : {}),
   };
+
+  const formattedImages = listing.images.map((img) => ({
+    id: img.id,
+    publicUrl: getPublicUrl(img.r2Key),
+    altText: img.altText,
+  }));
 
   return (
     <>
@@ -322,7 +329,7 @@ export default async function TiffinDetailPage({ params, searchParams }: DetailP
 
               {/* 2. ON MOBILE ONLY: Photos and Offerings immediately follow Hero */}
               <div className="lg:hidden flex flex-col gap-8">
-                <PhotosCarousel images={listing.images} listingName={listing.name} />
+                <PhotosCarousel images={formattedImages} listingName={listing.name} />
 
                 <div className="flex flex-col gap-4">
                   <h2 className="text-xl font-bold text-body">Offerings &amp; Pricing</h2>
@@ -526,7 +533,7 @@ export default async function TiffinDetailPage({ params, searchParams }: DetailP
               {/* Sticky wrapper restricting height so the inner container can scroll on desktop */}
               <div className="sticky top-24 flex flex-col gap-6 max-h-[calc(100vh-7rem)]">
 
-                <PhotosCarousel images={listing.images} listingName={listing.name} />
+                <PhotosCarousel images={formattedImages} listingName={listing.name} />
 
                 <div className="flex items-center gap-2 shrink-0">
                   <h2 className="text-xl font-bold text-body">Offerings &amp; Pricing</h2>

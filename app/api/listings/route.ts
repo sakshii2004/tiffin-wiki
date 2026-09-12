@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from 'next/server';
 import { AddListingSchema } from '@/lib/validations';
 import { getClientIp, hashIp, RateLimiters, checkAndIncrementRateLimit, RateLimitError } from '@/lib/rateLimit';
 import { generateSlug } from '@/lib/slugify';
-import { getPublicUrl } from '@/lib/r2';
 import { prisma } from '@/lib/prisma';
 import { computeSearchPrices } from '@/lib/searchPrices';
 
@@ -92,7 +91,6 @@ export async function POST(req: NextRequest) {
           images: {
             create: data.r2Keys.map((key, index) => ({
               r2Key: key,
-              publicUrl: getPublicUrl(key),
               sortOrder: index,
             })),
           },

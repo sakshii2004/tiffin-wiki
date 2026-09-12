@@ -1,5 +1,6 @@
 import { cache } from 'react';
 import { prisma } from '@/lib/prisma';
+import { getPublicUrl } from '@/lib/r2';
 import type { ListingCardProps } from '@/components/listing/ListingCard';
 
 /**
@@ -54,7 +55,7 @@ export interface ListingWithCover {
     searchPricePerMeal: number | null;
     searchPricePerMonth: number | null;
   }[];
-  images: { publicUrl: string; altText: string | null }[];
+  images: { r2Key: string; altText: string | null }[];
   reviews: { rating: number }[];
   _count: { reviews: number };
 }
@@ -101,7 +102,7 @@ export function toListingCardProps(listing: ListingWithCover): ListingCardProps 
       pricePerMealEstimated,
       pricePerMonthEstimated,
     },
-    coverImage: cover ? { publicUrl: cover.publicUrl, altText: cover.altText } : null,
+    coverImage: cover ? { publicUrl: getPublicUrl(cover.r2Key), altText: cover.altText } : null,
     reviewCount: listing._count.reviews,
     averageRating: computeAverageRating(listing.reviews) ?? undefined,
   };
