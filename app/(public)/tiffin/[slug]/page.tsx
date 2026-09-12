@@ -33,7 +33,6 @@ export const revalidate = 300; // 5 minutes
 
 interface DetailPageProps {
   params: Promise<{ slug: string }>;
-  searchParams: Promise<{ reviewed?: string; alreadyReviewed?: string }>;
 }
 
 const MEAL_VALUES = ['BREAKFAST', 'LUNCH', 'DINNER'] as const;
@@ -111,9 +110,8 @@ export async function generateMetadata({ params }: DetailPageProps): Promise<Met
   };
 }
 
-export default async function TiffinDetailPage({ params, searchParams }: DetailPageProps) {
+export default async function TiffinDetailPage({ params }: DetailPageProps) {
   const { slug } = await params;
-  const { reviewed, alreadyReviewed } = await searchParams;
   const listing = await getListingBySlug(slug);
 
   if (!listing || listing.status !== 'APPROVED') {
@@ -182,20 +180,16 @@ export default async function TiffinDetailPage({ params, searchParams }: DetailP
         dangerouslySetInnerHTML={{ __html: serializeJsonLd(jsonLd) }}
       />
       <SiteHeader showSearchBar defaultCity={listing.city} />
-      {reviewed === '1' && (
-        <SearchParamToast
-          param={reviewed}
-          message="Thank you! Your review has been posted."
-          type="success"
-        />
-      )}
-      {alreadyReviewed === '1' && (
-        <SearchParamToast
-          param={alreadyReviewed}
-          message="You've already reviewed this listing."
-          type="error"
-        />
-      )}
+      <SearchParamToast
+        paramName="reviewed"
+        message="Thank you! Your review has been posted."
+        type="success"
+      />
+      <SearchParamToast
+        paramName="alreadyReviewed"
+        message="You've already reviewed this listing."
+        type="error"
+      />
       <main id="main-content" className="flex-1">
         {/* 
           Container width updated to max-w-7xl to match standard navbar widths
