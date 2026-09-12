@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import { ReviewSchema } from '@/lib/validations';
-import { getPublicUrl } from '@/lib/r2';
 import { prisma } from '@/lib/prisma';
 import { getClientIp, hashIp, RateLimiters } from '@/lib/rateLimit';
 
@@ -72,7 +71,6 @@ export async function POST(req: NextRequest) {
       images: {
         create: r2Keys.map((key) => ({
           r2Key: key,
-          publicUrl: getPublicUrl(key),
         })),
       },
     },

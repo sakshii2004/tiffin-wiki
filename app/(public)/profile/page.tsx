@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { auth } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
+import { getPublicUrl } from '@/lib/r2';
 import { SiteHeader } from '@/components/layout/SiteHeader';
 import { SiteFooter } from '@/components/layout/SiteFooter';
 import { StarRatingDisplay } from '@/components/ui/StarRatingDisplay';
@@ -53,7 +54,7 @@ export default async function ProfilePage() {
           rating: true,
           body: true,
           createdAt: true,
-          images: { select: { id: true, publicUrl: true } },
+          images: { select: { id: true, r2Key: true } },
           service: { select: { name: true, slug: true, city: true } },
         },
       },
@@ -116,7 +117,7 @@ export default async function ProfilePage() {
 
             {user.reviews.length === 0 ? (
               <div className="rounded-2xl border border-slate-100 bg-white p-10 text-center shadow-sm">
-                <p className="text-[#475569] mb-4">You haven't reviewed any tiffin service yet.</p>
+                <p className="text-[#475569] mb-4">You haven&apos;t reviewed any tiffin service yet.</p>
                 <Link
                   href="/search"
                   className="inline-block bg-[#b85c38] text-white rounded-full px-5 py-2.5 font-medium text-sm hover:opacity-90 transition-all"
@@ -161,7 +162,7 @@ export default async function ProfilePage() {
                           {review.images.map((img) => (
                             <Image
                               key={img.id}
-                              src={img.publicUrl}
+                              src={getPublicUrl(img.r2Key)}
                               alt="Review photo"
                               width={80}
                               height={80}

@@ -1,10 +1,11 @@
 import Image from 'next/image';
 import type { Review } from '@prisma/client';
 import { StarRatingDisplay } from '@/components/ui/StarRatingDisplay';
+import { getPublicUrl } from '@/lib/r2';
 
 interface ReviewImageLike {
   id: string;
-  publicUrl: string;
+  r2Key: string;
 }
 
 interface ReviewCardProps {
@@ -73,7 +74,7 @@ export function ReviewCard({ review }: ReviewCardProps) {
           {images.map((img) => (
             <Image
               key={img.id}
-              src={img.publicUrl}
+              src={getPublicUrl(img.r2Key)}
               alt={`Review photo by ${user.name ?? 'reviewer'}`}
               width={96}
               height={96}

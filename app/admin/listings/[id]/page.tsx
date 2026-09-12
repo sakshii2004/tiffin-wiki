@@ -1,4 +1,5 @@
 import { prisma } from '@/lib/prisma';
+import { getPublicUrl } from '@/lib/r2';
 import { toTitleCase } from '@/lib/titleCase';
 import { notFound } from 'next/navigation';
 import Image from 'next/image';
@@ -159,13 +160,13 @@ export default async function AdminListingReviewPage({
                 {listing.images.map((img) => (
                   <a
                     key={img.id}
-                    href={img.publicUrl}
+                    href={getPublicUrl(img.r2Key)}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="group relative block overflow-hidden rounded-xl border border-slate-800"
                   >
                     <Image
-                      src={img.publicUrl}
+                      src={getPublicUrl(img.r2Key)}
                       alt={img.altText ?? listing.name}
                       width={300}
                       height={220}

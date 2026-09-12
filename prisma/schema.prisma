@@ -109,7 +109,6 @@ model ServiceImage {
   id        String   @id @default(cuid())
   serviceId String
   r2Key     String
-  publicUrl String
   altText   String?
   sortOrder Int      @default(0)
   createdAt DateTime @default(now())
@@ -141,7 +140,6 @@ model ReviewImage {
   id        String   @id @default(cuid())
   reviewId  String
   r2Key     String
-  publicUrl String
   createdAt DateTime @default(now())
 
   review Review @relation(fields: [reviewId], references: [id], onDelete: Cascade)
