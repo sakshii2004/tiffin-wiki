@@ -8,6 +8,7 @@ import { ImageUploader } from '@/components/forms/ImageUploader';
 import { Button } from '@/components/ui/Button';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
+import { useTelemetry } from '@/components/providers/TelemetryProvider';
 
 interface ReviewFormProps {
   serviceId: string;
@@ -16,6 +17,7 @@ interface ReviewFormProps {
 
 export function ReviewForm({ serviceId, slug }: ReviewFormProps) {
   const router = useRouter();
+  const { trackEvent } = useTelemetry();
   const [uploadedKeys, setUploadedKeys] = useState<string[]>([]);
   const [submitError, setSubmitError] = useState<string | null>(null);
 
@@ -33,6 +35,11 @@ export function ReviewForm({ serviceId, slug }: ReviewFormProps) {
       body: JSON.stringify(payload),
     });
     if (res.status === 201) {
+      trackEvent('REVIEW_SUBMIT_SUCCESS', {
+        listingSlug: slug,
+        rating: values.rating,
+        ctaName: 'REVIEW_FORM',
+      });
       router.push(`/tiffin/${slug}?reviewed=1`);
       return;
     }

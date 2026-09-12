@@ -57,28 +57,30 @@ export default async function AdminDashboardPage({
       topSearchQueries,
       vegFilterCount,
       mixedFilterCount,
+      topMealsFilter,
+      topContainersFilter,
+      topSpicesFilter,
       mobileCount,
       desktopCount,
       tabletCount,
       routeStatsRaw,
+      perRouteDwellRaw,
       listingViewsCount,
       addListingStarts,
       addListingSuccesses,
       reviewFormStarts,
       reviewFormSuccesses,
       recentEventsRaw,
+      totalSignupsInPeriod,
+      totalReviewsInPeriod,
+      avgRatingInPeriod,
+      dailyTrendRaw,
+      hourlyRaw,
     ] = await Promise.all([
       prisma.telemetryEvent.count({ where: { ...whereTime, eventType: 'WHATSAPP_REVEAL' } }),
       prisma.telemetryEvent.count({ where: { ...whereTime, eventType: 'WHATSAPP_OPEN' } }),
       prisma.telemetryEvent.count({
-        where: {
-          ...whereTime,
-          OR: [
-            { eventType: 'SEARCH_EXECUTE' },
-            { searchQuery: { not: null } },
-            { pathname: { startsWith: '/search' } },
-          ],
-        },
+        where: { ...whereTime, eventType: 'SEARCH_EXECUTE' },
       }),
       prisma.telemetryEvent.count({ where: { ...whereTime, eventType: 'PAGE_VIEW' } }),
       prisma.telemetryEvent.groupBy({
@@ -118,6 +120,27 @@ export default async function AdminDashboardPage({
       prisma.telemetryEvent.count({
         where: { ...whereTime, filterName: 'veg', filterValue: 'false' },
       }),
+      prisma.telemetryEvent.groupBy({
+        by: ['filterValue'],
+        where: { ...whereTime, eventType: 'FILTER_TOGGLE', filterName: 'meals', filterValue: { not: null } },
+        _count: { filterValue: true },
+        orderBy: { _count: { filterValue: 'desc' } },
+        take: 5,
+      }),
+      prisma.telemetryEvent.groupBy({
+        by: ['filterValue'],
+        where: { ...whereTime, eventType: 'FILTER_TOGGLE', filterName: 'containers', filterValue: { not: null } },
+        _count: { filterValue: true },
+        orderBy: { _count: { filterValue: 'desc' } },
+        take: 5,
+      }),
+      prisma.telemetryEvent.groupBy({
+        by: ['filterValue'],
+        where: { ...whereTime, eventType: 'FILTER_TOGGLE', filterName: 'spices', filterValue: { not: null } },
+        _count: { filterValue: true },
+        orderBy: { _count: { filterValue: 'desc' } },
+        take: 5,
+      }),
       prisma.telemetryEvent.count({ where: { ...whereTime, deviceType: 'mobile' } }),
       prisma.telemetryEvent.count({ where: { ...whereTime, deviceType: 'desktop' } }),
       prisma.telemetryEvent.count({ where: { ...whereTime, deviceType: 'tablet' } }),
@@ -127,6 +150,11 @@ export default async function AdminDashboardPage({
         _count: { pathname: true },
         orderBy: { _count: { pathname: 'desc' } },
         take: 10,
+      }),
+      prisma.telemetryEvent.groupBy({
+        by: ['pathname'],
+        where: { ...whereTime, eventType: 'TIME_SPENT', durationSec: { not: null } },
+        _avg: { durationSec: true },
       }),
       prisma.telemetryEvent.count({
         where: { ...whereTime, eventType: 'PAGE_VIEW', pathname: { startsWith: '/tiffin/' } },
@@ -148,6 +176,50 @@ export default async function AdminDashboardPage({
         orderBy: { createdAt: 'desc' },
         take: 100,
       }),
+      prisma.user.count({
+        where: { createdAt: { gte: dateThreshold } },
+      }),
+      prisma.review.count({
+        where: { createdAt: { gte: dateThreshold } },
+      }),
+      prisma.review.aggregate({
+        _avg: { rating: true },
+        where: { isVisible: true, createdAt: { gte: dateThreshold } },
+      }),
+      prisma.$queryRaw<
+        Array<{
+          date: string;
+          views: number;
+          sessions: number;
+          searches: number;
+          whatsapp: number;
+        }>
+      >`
+        SELECT
+          TO_CHAR("createdAt" AT TIME ZONE 'Asia/Kolkata', 'YYYY-MM-DD') AS date,
+          COUNT(*) FILTER (WHERE "eventType" = 'PAGE_VIEW')::int AS views,
+          COUNT(DISTINCT "sessionId")::int AS sessions,
+          COUNT(*) FILTER (WHERE "eventType" = 'SEARCH_EXECUTE')::int AS searches,
+          COUNT(*) FILTER (WHERE "eventType" IN ('WHATSAPP_REVEAL', 'WHATSAPP_OPEN'))::int AS whatsapp
+        FROM "TelemetryEvent"
+        WHERE "createdAt" >= ${dateThreshold}
+        GROUP BY 1
+        ORDER BY date ASC
+      `,
+      prisma.$queryRaw<
+        Array<{
+          hour: number;
+          count: number;
+        }>
+      >`
+        SELECT
+          EXTRACT(HOUR FROM ("createdAt" AT TIME ZONE 'Asia/Kolkata'))::int AS hour,
+          COUNT(*)::int AS count
+        FROM "TelemetryEvent"
+        WHERE "createdAt" >= ${dateThreshold}
+        GROUP BY 1
+        ORDER BY hour ASC
+      `,
     ]);
 
     // City-wise Tiffins Breakdown
@@ -161,16 +233,6 @@ export default async function AdminDashboardPage({
     searchesByCity.forEach((s: { city: string | null; _count: { city: number } }) => {
       if (s.city) {
         citySearchMap[s.city.toLowerCase().trim()] = s._count.city;
-      }
-    });
-
-    // Also populate from recent search queries if city field was null on older events
-    recentEventsRaw.forEach((e) => {
-      if (e.eventType === 'SEARCH_EXECUTE' || e.searchQuery || e.pathname.startsWith('/search')) {
-        const loc = (e.city || e.searchQuery || '').toLowerCase().trim();
-        if (loc) {
-          citySearchMap[loc] = (citySearchMap[loc] || 0) + 1;
-        }
       }
     });
 
@@ -209,7 +271,11 @@ export default async function AdminDashboardPage({
       }
     });
 
-    const topSlugs = Object.keys(listingStatsMap).slice(0, 10);
+    const topSlugs = Object.entries(listingStatsMap)
+      .sort(([, a], [, b]) => (b.whatsapp + b.views) - (a.whatsapp + a.views))
+      .slice(0, 10)
+      .map(([slug]) => slug);
+
     const topListingsFromDb = await prisma.tiffinService.findMany({
       where: { slug: { in: topSlugs } },
       select: { id: true, name: true, slug: true, city: true },
@@ -224,43 +290,35 @@ export default async function AdminDashboardPage({
       whatsappCount: listingStatsMap[l.slug]?.whatsapp || 0,
     })).sort((a, b) => b.whatsappCount !== a.whatsappCount ? b.whatsappCount - a.whatsappCount : b.viewsCount - a.viewsCount);
 
-    // Daily trend generator
-    const dailyMap: Record<string, { views: number; sessions: Set<string>; searches: number; whatsapp: number }> = {};
-    recentEventsRaw.forEach((evt) => {
-      const dateKey = new Date(evt.createdAt).toISOString().split('T')[0];
-      if (!dailyMap[dateKey]) {
-        dailyMap[dateKey] = { views: 0, sessions: new Set(), searches: 0, whatsapp: 0 };
-      }
-      dailyMap[dateKey].sessions.add(evt.sessionId);
-      if (evt.eventType === 'PAGE_VIEW') dailyMap[dateKey].views++;
-      if (evt.eventType === 'SEARCH_EXECUTE') dailyMap[dateKey].searches++;
-      if (evt.eventType === 'WHATSAPP_REVEAL' || evt.eventType === 'WHATSAPP_OPEN') dailyMap[dateKey].whatsapp++;
-    });
+    // Daily trend generator (from DB aggregation)
+    const dailyTrend = dailyTrendRaw.map((d) => ({
+      date: d.date,
+      views: Number(d.views) || 0,
+      sessions: Number(d.sessions) || 0,
+      searches: Number(d.searches) || 0,
+      whatsapp: Number(d.whatsapp) || 0,
+    }));
 
-    const dailyTrend = Object.keys(dailyMap)
-      .sort()
-      .slice(-14)
-      .map((date) => ({
-        date,
-        views: dailyMap[date].views,
-        sessions: dailyMap[date].sessions.size,
-        searches: dailyMap[date].searches,
-        whatsapp: dailyMap[date].whatsapp,
-      }));
-
-    // Hourly distribution generator (0 to 23)
+    // Hourly distribution generator (0 to 23 in IST from DB aggregation)
     const hourlyCounts = new Array(24).fill(0);
-    recentEventsRaw.forEach((evt) => {
-      const hour = new Date(evt.createdAt).getHours();
-      hourlyCounts[hour]++;
+    hourlyRaw.forEach((h) => {
+      const hr = Number(h.hour);
+      if (hr >= 0 && hr < 24) {
+        hourlyCounts[hr] = Number(h.count) || 0;
+      }
     });
     const hourlyDistribution = hourlyCounts.map((count, hour) => ({ hour, count }));
 
-    // Route breakdown with average dwell time
+    // Route breakdown with per-route average dwell time
+    const dwellByRoute: Record<string, number> = {};
+    perRouteDwellRaw.forEach((r) => {
+      dwellByRoute[r.pathname] = Math.round(r._avg.durationSec || 0);
+    });
+
     const routeBreakdown = routeStatsRaw.map((r: { pathname: string; _count: { pathname: number } }) => ({
       pathname: r.pathname,
       views: r._count.pathname,
-      avgDwellSec: Math.round(avgDwellRes._avg.durationSec || 15),
+      avgDwellSec: dwellByRoute[r.pathname] ?? Math.round(avgDwellRes._avg.durationSec || 0),
     }));
 
     // Funnel calculations
@@ -275,9 +333,9 @@ export default async function AdminDashboardPage({
         whatsappReveals,
         whatsappOpens,
         whatsappTotal,
-        totalSignups,
-        totalReviews,
-        avgRating: avgRatingAgg._avg.rating ?? null,
+        totalSignups: totalSignupsInPeriod,
+        totalReviews: totalReviewsInPeriod,
+        avgRating: avgRatingInPeriod._avg.rating ?? null,
         citiesCoveredCount: citiesCoveredSet.size,
         totalApprovedTiffins: approved,
         totalSearches,
@@ -295,9 +353,9 @@ export default async function AdminDashboardPage({
       filtersBreakdown: {
         vegCount: vegFilterCount,
         mixedCount: mixedFilterCount,
-        topMeals: [],
-        topContainers: [],
-        topSpices: [],
+        topMeals: topMealsFilter.map((m) => ({ meal: m.filterValue || '', count: m._count.filterValue })),
+        topContainers: topContainersFilter.map((c) => ({ type: c.filterValue || '', count: c._count.filterValue })),
+        topSpices: topSpicesFilter.map((s) => ({ level: s.filterValue || '', count: s._count.filterValue })),
       },
       deviceSplit: {
         mobile: mobileCount,

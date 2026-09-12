@@ -21,41 +21,42 @@ interface SiteHeaderProps {
  */
 export function SiteHeader({ showSearchBar = false, defaultCity, defaultQ }: SiteHeaderProps) {
   return (
-    <header className="sticky top-0 z-50 w-full px-4 sm:px-6 lg:px-8 pt-4 md:pt-6 bg-transparent pointer-events-none">
-      <div className="mx-auto max-w-[1152px] w-full bg-white/95 backdrop-blur-[10px] rounded-[28px] md:rounded-full border border-slate-200/50 shadow-[0_0_15px_rgba(0,0,0,0.05)] px-6 py-2 md:py-2.5 flex flex-col md:flex-row md:items-center justify-between min-h-[56px] pointer-events-auto">
-        <div className="flex items-center justify-between w-full md:w-auto h-10 md:h-11">
+    <header className="sticky top-0 z-50 w-full px-3 sm:px-6 lg:px-8 pt-3 sm:pt-4 md:pt-6 bg-transparent pointer-events-none">
+      <div className="mx-auto max-w-[1152px] w-full bg-white/95 backdrop-blur-[10px] rounded-[24px] md:rounded-full border border-slate-200/50 shadow-[0_0_15px_rgba(0,0,0,0.05)] px-3.5 sm:px-6 py-2 md:py-2.5 flex flex-col md:flex-row md:items-center justify-between min-h-[52px] md:min-h-[56px] pointer-events-auto">
+        <div className="flex items-center justify-between w-full md:w-auto h-9 sm:h-10 md:h-11">
           {/* Logo / wordmark */}
           <Link
             href="/"
-            className="flex items-center cursor-pointer focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#b85c38]"
+            className="flex items-center cursor-pointer focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#b85c38] shrink-0"
             aria-label="Tiffin Wiki — home"
           >
             <Image
               src="/tiffin-wiki-logo.png"
               alt="Tiffin Wiki Logo"
-              width={160}
-              height={40}
+              width={150}
+              height={38}
               priority
-              className="h-8 md:h-9 w-auto object-contain"
+              className="h-7 sm:h-8 md:h-9 w-auto object-contain"
             />
           </Link>
 
           {/* On Mobile: Action buttons shown on the right side of the header */}
-          <div className="flex items-center gap-4 md:hidden">
+          <div className="flex items-center gap-2 sm:gap-3 md:hidden shrink-0">
             <NavAuthSection />
             <Link
               href="/add"
-              className="bg-[#b85c38] text-white rounded-full px-4 py-2 font-medium text-[14px] flex items-center gap-1.5 hover:opacity-90 transition-all focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#b85c38]"
+              className="bg-[#b85c38] text-white rounded-full px-3 sm:px-4 py-1.5 sm:py-2 font-medium text-xs sm:text-[14px] flex items-center gap-1 hover:opacity-90 transition-all focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#b85c38] shrink-0"
             >
-              <Plus size={18} />
-              <span className="sr-only sm:not-sr-only">Add a Tiffin</span>
+              <Plus size={16} className="sm:w-[18px] sm:h-[18px]" />
+              <span className="hidden sm:inline">Add a Tiffin</span>
+              <span className="sm:hidden">Add</span>
             </Link>
           </div>
         </div>
 
         {/* Optional inline search — centered on desktop, stacked on mobile */}
         {showSearchBar && (
-          <div className="w-full md:max-w-md md:flex-1 md:mx-6 pb-2 md:pb-0">
+          <div className="w-full md:max-w-md md:flex-1 md:mx-6 pt-2 pb-1 md:pt-0 md:pb-0">
             <SearchBar defaultCity={defaultCity} defaultQ={defaultQ} disableScaleOnFocus />
           </div>
         )}

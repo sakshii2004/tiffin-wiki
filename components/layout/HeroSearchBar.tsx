@@ -42,47 +42,51 @@ export function HeroSearchBar() {
   }
 
   return (
-    <div className="w-full">
+    <div className="w-full px-2 sm:px-0">
       {/* Search form */}
       <form 
+        action="/search"
+        method="GET"
         onSubmit={handleSubmit} 
-        className="mx-auto w-full max-w-[680px] mb-5 bg-white rounded-full shadow-[0_4px_24px_rgba(0,0,0,0.08)] border border-[#f1f5f9] flex items-center p-1.5 pl-5 gap-2 md:gap-3 transition-all duration-300 ease-out focus-within:scale-[1.015] focus-within:shadow-[0_8px_32px_rgba(0,0,0,0.12)] focus-within:border-[#e2e8f0]"
+        className="mx-auto w-full max-w-[680px] mb-5 bg-white rounded-full shadow-[0_4px_24px_rgba(0,0,0,0.08)] border border-[#f1f5f9] flex items-center p-1.5 pl-3.5 sm:pl-5 gap-1.5 sm:gap-2 md:gap-3 transition-all duration-300 ease-out focus-within:scale-[1.015] focus-within:shadow-[0_8px_32px_rgba(0,0,0,0.12)] focus-within:border-[#e2e8f0]"
       >
         <span className="text-[#94a3b8] shrink-0">
-          <MapPinIcon size={22} />
+          <MapPinIcon size={20} />
         </span>
         <input
           type="text"
-          placeholder="Where do you need food? (e.g. Kothrud)"
-          className="flex-1 border-none outline-none text-base text-[#0f172a] bg-transparent placeholder-[#94a3b8] focus:ring-0"
+          name="q"
+          placeholder="Where do you need food?"
+          className="min-w-0 flex-1 border-none outline-none text-sm sm:text-base text-[#0f172a] bg-transparent placeholder-[#94a3b8] focus:ring-0 p-0"
           value={searchQuery}
           onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearchQuery(e.target.value)}
         />
-        <div className="w-px h-7 bg-[#e2e8f0] mx-1 shrink-0" />
+        <div className="w-px h-6 sm:h-7 bg-[#e2e8f0] mx-0.5 sm:mx-1 shrink-0" />
         <button
           type="submit"
-          className="bg-[#0f172a] text-white hover:bg-slate-800 transition-colors border-none rounded-full px-5.5 py-2.5 font-medium text-sm md:text-base flex items-center gap-2 cursor-pointer shrink-0 focus:outline-none focus:ring-2 focus:ring-[#b85c38] focus:ring-offset-2"
+          className="bg-[#0f172a] text-white hover:bg-slate-800 transition-colors border-none rounded-full px-3.5 sm:px-5.5 py-2 sm:py-2.5 font-medium text-xs sm:text-sm md:text-base flex items-center gap-1.5 sm:gap-2 cursor-pointer shrink-0 focus:outline-none focus:ring-2 focus:ring-[#b85c38] focus:ring-offset-2"
         >
           <SearchIcon />
-          <span>Find Tiffins</span>
+          <span className="hidden sm:inline">Find Tiffins</span>
+          <span className="sm:hidden">Find</span>
         </button>
       </form>
 
       {/* Value Proposition Badges */}
-      <div className="flex flex-wrap justify-center gap-2.5 text-[13px] text-[#64748b]">
+      <div className="flex flex-wrap justify-center gap-2 sm:gap-2.5 text-xs sm:text-[13px] text-[#64748b]">
         <span
-          className="inline-flex items-center gap-1.5 bg-white px-3.5 py-1.5 rounded-full border border-[#e2e8f0] shadow-[0_1px_4px_rgba(0,0,0,0.05)] cursor-default select-none font-medium text-[#64748b]"
+          className="inline-flex items-center gap-1 sm:gap-1.5 bg-white px-2.5 sm:px-3.5 py-1 sm:py-1.5 rounded-full border border-[#e2e8f0] shadow-[0_1px_4px_rgba(0,0,0,0.05)] cursor-default select-none font-medium text-[#64748b]"
         >
-          <NavigationIcon size={14} />
+          <NavigationIcon size={13} />
           <span>Home-Cooked Tiffins</span>
         </span>
         <span
-          className="inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-[#eef5e6] text-[#2d5c10] border border-[#b6d98a] rounded-full font-semibold cursor-default select-none"
+          className="inline-flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-3.5 py-1 sm:py-1.5 bg-[#eef5e6] text-[#2d5c10] border border-[#b6d98a] rounded-full font-semibold cursor-default select-none"
         >
-          Pure Veg & Regional Meals
+          Pure Veg &amp; Regional Meals
         </span>
         <span
-          className="inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-[#eff6ff] text-[#1d4ed8] border border-[#dbeafe] rounded-full font-semibold cursor-default select-none"
+          className="inline-flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-3.5 py-1 sm:py-1.5 bg-[#eff6ff] text-[#1d4ed8] border border-[#dbeafe] rounded-full font-semibold cursor-default select-none"
         >
           Direct Provider Contact
         </span>

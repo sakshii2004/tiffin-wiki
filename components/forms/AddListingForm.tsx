@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { useTelemetry } from '@/components/providers/TelemetryProvider';
 import { useForm, Controller, useFieldArray, type Resolver } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { AddListingClientSchema, type AddListingClientInput } from '@/lib/validations';
@@ -176,6 +177,7 @@ const checkboxClass = `${checkboxBase} has-[:checked]:border-[#6aa337] has-[:che
 
 export function AddListingForm() {
   const router = useRouter();
+  const { trackEvent } = useTelemetry();
   const [step, setStep] = useState<Step>(1);
   const [uploadedKeys, setUploadedKeys] = useState<string[]>([]);
   const [submitError, setSubmitError] = useState<string | null>(null);
@@ -353,6 +355,10 @@ export function AddListingForm() {
     // Only 201 is a real, persisted submission. The server's 200 is exclusively
     // the silent honeypot path and must never be reached by the legitimate flow.
     if (res.status === 201) {
+      trackEvent('ADD_LISTING_SUCCESS', {
+        city: values.city,
+        ctaName: 'ADD_LISTING_FORM',
+      });
       router.push('/add/submitted');
       return;
     }

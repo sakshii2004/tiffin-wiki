@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { useTelemetry } from '@/components/providers/TelemetryProvider';
 import { FilterDropdown } from './FilterDropdown';
 import { DualRangeSlider } from './DualRangeSlider';
 import { cn } from '@/lib/cn';
@@ -44,11 +45,8 @@ function ChiliIcon({ size = 14, className }: { size?: number; className?: string
       strokeLinejoin="round"
       className={className}
     >
-      {/* Outer outline: stem and body */}
       <path d="M8 7c0 5-2 11-5 15c3-1 11-5 13-15c-1-1-2-2-2.5-2.5c0-1.5-.5-2.5-1-2.5c-.5 0-1 1-1 2.5C10 5 9 6 8 7z" />
-      {/* 3-pointed crown separator */}
       <path d="M8 7l2-1.5l2 3l2-3l2 1.5" />
-      {/* Internal reflection highlight lines */}
       <path d="M7.8 11.5c-.3 1.5-.8 3-1.3 4.5" />
       <path d="M5.8 17.5c-.2.6-.4 1.2-.5 1.5" />
     </svg>
@@ -92,7 +90,7 @@ const CONTAINER_OPTIONS = [
 
 const SPICE_OPTIONS = [
   { label: 'Mild', value: 'MILD' },
-  { label: 'Normal', value: 'MEDIUM' }, // normal maps to MEDIUM in DB
+  { label: 'Normal', value: 'MEDIUM' },
   { label: 'Spicy', value: 'SPICY' },
 ];
 
@@ -119,6 +117,7 @@ export function FilterBar({
   currentMaxMonthPrice,
 }: FilterBarProps) {
   const router = useRouter();
+  const { trackEvent } = useTelemetry();
 
   // Local state for dropdown filters to support "Apply" button
   const [meals, setMeals] = useState<string[]>(currentMeals);
@@ -148,15 +147,29 @@ export function FilterBar({
     setMaxMonth(currentMaxMonthPrice ?? 10000);
   }, [currentMinMonthPrice, currentMaxMonthPrice]);
 
-  const applyFilters = (overrides?: Partial<Record<string, string | number | undefined>>) => {
+  const applyFilters = (overrides?: Partial<Record<string, string | number | boolean | undefined>>) => {
+    const activeVeg = overrides?.veg !== undefined ? (overrides.veg === 'true' || overrides.veg === true) : currentVeg;
+    const activeMeals = overrides?.meals !== undefined 
+      ? (overrides.meals ? String(overrides.meals).split(',') : []) 
+      : meals;
+    const activeDays = overrides?.days !== undefined 
+      ? (overrides.days ? String(overrides.days).split(',') : []) 
+      : days;
+    const activeContainers = overrides?.containers !== undefined 
+      ? (overrides.containers ? String(overrides.containers).split(',') : []) 
+      : containers;
+    const activeSpices = overrides?.spices !== undefined 
+      ? (overrides.spices ? String(overrides.spices).split(',') : []) 
+      : spices;
+
     const params: Record<string, string | undefined> = {
       city: currentCity,
       q: currentQ,
-      veg: currentVeg ? 'true' : undefined,
-      meals: meals.length > 0 ? meals.join(',') : undefined,
-      days: days.length > 0 ? days.join(',') : undefined,
-      containers: containers.length > 0 ? containers.join(',') : undefined,
-      spices: spices.length > 0 ? spices.join(',') : undefined,
+      veg: activeVeg ? 'true' : undefined,
+      meals: activeMeals.length > 0 ? activeMeals.join(',') : undefined,
+      days: activeDays.length > 0 ? activeDays.join(',') : undefined,
+      containers: activeContainers.length > 0 ? activeContainers.join(',') : undefined,
+      spices: activeSpices.length > 0 ? activeSpices.join(',') : undefined,
       minMealPrice: minMeal > 0 || maxMeal < 500 ? String(minMeal) : undefined,
       maxMealPrice: minMeal > 0 || maxMeal < 500 ? String(maxMeal) : undefined,
       minMonthPrice: minMonth > 0 || maxMonth < 10000 ? String(minMonth) : undefined,
@@ -165,9 +178,28 @@ export function FilterBar({
 
     if (overrides) {
       Object.entries(overrides).forEach(([k, v]) => {
-        params[k] = v === undefined ? undefined : String(v);
+        if (v === undefined) {
+          params[k] = undefined;
+        } else if (typeof v === 'boolean') {
+          params[k] = v ? 'true' : undefined;
+        } else {
+          params[k] = String(v);
+        }
       });
     }
+
+    if (activeVeg !== undefined) {
+      trackEvent('FILTER_TOGGLE', { filterName: 'veg', filterValue: String(activeVeg) });
+    }
+    activeMeals.forEach((m) => {
+      trackEvent('FILTER_TOGGLE', { filterName: 'meals', filterValue: m });
+    });
+    activeContainers.forEach((c) => {
+      trackEvent('FILTER_TOGGLE', { filterName: 'containers', filterValue: c });
+    });
+    activeSpices.forEach((s) => {
+      trackEvent('FILTER_TOGGLE', { filterName: 'spices', filterValue: s });
+    });
 
     router.push(buildSearchUrl(params));
   };
@@ -269,7 +301,6 @@ export function FilterBar({
 
   const renderDaysLabel = () => {
     if (days.length === 0) return 'Operational Days';
-
     const totalSelected = days.length;
 
     if (totalSelected === 7) {
@@ -284,7 +315,6 @@ export function FilterBar({
       return renderPills(days, DAYS_OPTIONS, 'Operational Days', 'green');
     }
 
-    // Sort according to original options order (for 6 days, show 4 pills + a "+2" badge)
     const sortedSelected = DAYS_OPTIONS
       .filter((opt) => days.includes(opt.value))
       .map((opt) => opt.value);
@@ -344,36 +374,35 @@ export function FilterBar({
   const cityDisplay = toTitleCase(currentCity);
 
   return (
-    <div className="flex flex-nowrap lg:flex-col items-start gap-3 overflow-x-auto lg:overflow-visible pb-2 pt-1 w-full lg:items-stretch">
+    <div className="flex flex-nowrap lg:flex-col items-start gap-2.5 sm:gap-3 overflow-x-auto lg:overflow-visible pb-2 pt-1 w-full lg:items-stretch scrollbar-none">
       {/* Active city chip */}
       {currentCity && (
-        <>
-          <button
-            type="button"
-            onClick={clearCity}
-            className="inline-flex min-h-[34px] shrink-0 items-center justify-center gap-1.5 rounded-full bg-brand-peridot/15 px-3.5 text-xs font-semibold text-body hover:bg-brand-peridot/25 border border-brand-peridot/30 transition-colors cursor-pointer w-auto"
-            aria-label={`Remove city filter ${cityDisplay}`}
-          >
-            {cityDisplay}
-            <span aria-hidden="true" className="font-bold text-sm line-none">×</span>
-          </button>
-          <span aria-hidden="true" className="h-6 w-px shrink-0 bg-gray-200 lg:hidden" />
-        </>
+        <button
+          type="button"
+          onClick={clearCity}
+          className="inline-flex min-h-[34px] shrink-0 items-center justify-between gap-1.5 rounded-full bg-brand-peridot/15 px-3.5 text-xs font-semibold text-body hover:bg-brand-peridot/25 border border-brand-peridot/30 transition-colors cursor-pointer w-auto lg:w-full whitespace-nowrap"
+          aria-label={`Remove city filter ${cityDisplay}`}
+        >
+          <span>{cityDisplay}</span>
+          <span aria-hidden="true" className="font-bold text-sm">×</span>
+        </button>
       )}
 
       {/* Pure Veg Toggle */}
-      <div className="flex items-center justify-between gap-2.5 px-3.5 py-1 rounded-full border border-slate-200 bg-white min-h-[34px] shrink-0 shadow-[0_1px_2px_rgba(0,0,0,0.02)] w-auto lg:w-full">
-        <span className="flex items-center gap-1.5 text-xs font-bold text-[#0f172a] select-none">
+      <button 
+        type="button"
+        role="switch"
+        aria-checked={currentVeg}
+        onClick={() => applyFilters({ veg: currentVeg ? undefined : 'true' })}
+        className="flex items-center justify-between gap-2.5 px-3.5 py-1 rounded-full border border-slate-200 bg-white min-h-[34px] shrink-0 shadow-[0_1px_2px_rgba(0,0,0,0.02)] w-auto lg:w-full cursor-pointer select-none hover:border-slate-300 transition-colors"
+      >
+        <span className="flex items-center gap-1.5 text-xs font-bold text-[#0f172a] whitespace-nowrap">
           <Leaf size={14} className={currentVeg ? "text-[#6aa337] fill-[#6aa337]/10" : "text-slate-400"} />
           Pure Veg
         </span>
-        <button
-          type="button"
-          role="switch"
-          aria-checked={currentVeg}
-          onClick={() => applyFilters({ veg: currentVeg ? undefined : 'true' })}
+        <span
           className={cn(
-            'relative inline-flex h-3 w-8 shrink-0 cursor-pointer rounded-full items-center transition-colors duration-200 ease-in-out outline-none border-none',
+            'relative inline-flex h-3 w-8 shrink-0 rounded-full items-center transition-colors duration-200 ease-in-out pointer-events-none',
             currentVeg ? 'bg-[#00A651]/75' : 'bg-slate-200',
             FOCUS_RING
           )}
@@ -386,8 +415,8 @@ export function FilterBar({
           >
             <span className="w-2 h-2 rounded-full bg-[#00A651]" />
           </span>
-        </button>
-      </div>
+        </span>
+      </button>
 
       {/* Type of Meal Dropdown */}
       <FilterDropdown
@@ -398,10 +427,10 @@ export function FilterBar({
         icon={<Soup size={14} />}
       >
         {(close) => (
-          <div className="flex flex-col gap-2.5 min-w-[180px]">
+          <div className="flex flex-col gap-2.5 min-w-[200px]">
             <div className="flex flex-col gap-2">
               {MEALS_OPTIONS.map((opt) => (
-                <label key={opt.value} className="flex items-center gap-2.5 cursor-pointer py-1 px-1.5 hover:bg-slate-50 rounded-lg">
+                <label key={opt.value} className="flex items-center gap-2.5 cursor-pointer py-1.5 px-2 hover:bg-slate-50 rounded-lg">
                   <input
                     type="checkbox"
                     checked={meals.includes(opt.value)}
@@ -412,7 +441,7 @@ export function FilterBar({
                 </label>
               ))}
             </div>
-            <div className="flex items-center justify-between border-t border-slate-100 pt-2 mt-1">
+            <div className="flex items-center justify-between border-t border-slate-100 pt-3 mt-1">
               <button
                 type="button"
                 onClick={() => {
@@ -420,7 +449,7 @@ export function FilterBar({
                   applyFilters({ meals: undefined });
                   close();
                 }}
-                className="text-xs font-semibold text-slate-500 hover:text-slate-700 px-1 py-1 cursor-pointer"
+                className="text-xs font-semibold text-slate-500 hover:text-slate-700 px-2 py-1.5 cursor-pointer"
               >
                 Clear
               </button>
@@ -430,7 +459,7 @@ export function FilterBar({
                   applyFilters();
                   close();
                 }}
-                className="bg-[#6aa337] text-white text-xs font-bold rounded-full px-3 py-1.5 hover:opacity-90 transition-opacity cursor-pointer"
+                className="bg-[#6aa337] text-white text-xs font-bold rounded-full px-4 py-2 hover:opacity-90 transition-opacity cursor-pointer shadow-sm"
               >
                 Apply
               </button>
@@ -449,10 +478,10 @@ export function FilterBar({
         icon={<CalendarDays size={14} />}
       >
         {(close) => (
-          <div className="flex flex-col gap-2.5 min-w-[180px]">
-            <div className="flex flex-col gap-2 max-h-48 overflow-y-auto pr-1">
+          <div className="flex flex-col gap-2.5 min-w-[200px]">
+            <div className="flex flex-col gap-1.5 max-h-56 overflow-y-auto pr-1">
               {DAYS_OPTIONS.map((opt) => (
-                <label key={opt.value} className="flex items-center gap-2.5 cursor-pointer py-1 px-1.5 hover:bg-slate-50 rounded-lg">
+                <label key={opt.value} className="flex items-center gap-2.5 cursor-pointer py-1.5 px-2 hover:bg-slate-50 rounded-lg">
                   <input
                     type="checkbox"
                     checked={days.includes(opt.value)}
@@ -463,7 +492,7 @@ export function FilterBar({
                 </label>
               ))}
             </div>
-            <div className="flex items-center justify-between border-t border-slate-100 pt-2 mt-1">
+            <div className="flex items-center justify-between border-t border-slate-100 pt-3 mt-1">
               <button
                 type="button"
                 onClick={() => {
@@ -471,7 +500,7 @@ export function FilterBar({
                   applyFilters({ days: undefined });
                   close();
                 }}
-                className="text-xs font-semibold text-slate-500 hover:text-slate-700 px-1 py-1 cursor-pointer"
+                className="text-xs font-semibold text-slate-500 hover:text-slate-700 px-2 py-1.5 cursor-pointer"
               >
                 Clear
               </button>
@@ -481,7 +510,7 @@ export function FilterBar({
                   applyFilters();
                   close();
                 }}
-                className="bg-[#6aa337] text-white text-xs font-bold rounded-full px-3 py-1.5 hover:opacity-90 transition-opacity cursor-pointer"
+                className="bg-[#6aa337] text-white text-xs font-bold rounded-full px-4 py-2 hover:opacity-90 transition-opacity cursor-pointer shadow-sm"
               >
                 Apply
               </button>
@@ -499,10 +528,10 @@ export function FilterBar({
         icon={<PaperBagIcon size={14} />}
       >
         {(close) => (
-          <div className="flex flex-col gap-2.5 min-w-[180px]">
+          <div className="flex flex-col gap-2.5 min-w-[200px]">
             <div className="flex flex-col gap-2">
               {CONTAINER_OPTIONS.map((opt) => (
-                <label key={opt.value} className="flex items-center gap-2.5 cursor-pointer py-1 px-1.5 hover:bg-slate-50 rounded-lg">
+                <label key={opt.value} className="flex items-center gap-2.5 cursor-pointer py-1.5 px-2 hover:bg-slate-50 rounded-lg">
                   <input
                     type="checkbox"
                     checked={containers.includes(opt.value)}
@@ -513,7 +542,7 @@ export function FilterBar({
                 </label>
               ))}
             </div>
-            <div className="flex items-center justify-between border-t border-slate-100 pt-2 mt-1">
+            <div className="flex items-center justify-between border-t border-slate-100 pt-3 mt-1">
               <button
                 type="button"
                 onClick={() => {
@@ -521,7 +550,7 @@ export function FilterBar({
                   applyFilters({ containers: undefined });
                   close();
                 }}
-                className="text-xs font-semibold text-slate-500 hover:text-slate-700 px-1 py-1 cursor-pointer"
+                className="text-xs font-semibold text-slate-500 hover:text-slate-700 px-2 py-1.5 cursor-pointer"
               >
                 Clear
               </button>
@@ -531,7 +560,7 @@ export function FilterBar({
                   applyFilters();
                   close();
                 }}
-                className="bg-[#6aa337] text-white text-xs font-bold rounded-full px-3 py-1.5 hover:opacity-90 transition-opacity cursor-pointer"
+                className="bg-[#6aa337] text-white text-xs font-bold rounded-full px-4 py-2 hover:opacity-90 transition-opacity cursor-pointer shadow-sm"
               >
                 Apply
               </button>
@@ -549,10 +578,10 @@ export function FilterBar({
         icon={<ChiliIcon size={14} />}
       >
         {(close) => (
-          <div className="flex flex-col gap-2.5 min-w-[180px]">
+          <div className="flex flex-col gap-2.5 min-w-[200px]">
             <div className="flex flex-col gap-2">
               {SPICE_OPTIONS.map((opt) => (
-                <label key={opt.value} className="flex items-center gap-2.5 cursor-pointer py-1 px-1.5 hover:bg-slate-50 rounded-lg">
+                <label key={opt.value} className="flex items-center gap-2.5 cursor-pointer py-1.5 px-2 hover:bg-slate-50 rounded-lg">
                   <input
                     type="checkbox"
                     checked={spices.includes(opt.value)}
@@ -563,7 +592,7 @@ export function FilterBar({
                 </label>
               ))}
             </div>
-            <div className="flex items-center justify-between border-t border-slate-100 pt-2 mt-1">
+            <div className="flex items-center justify-between border-t border-slate-100 pt-3 mt-1">
               <button
                 type="button"
                 onClick={() => {
@@ -571,7 +600,7 @@ export function FilterBar({
                   applyFilters({ spices: undefined });
                   close();
                 }}
-                className="text-xs font-semibold text-slate-500 hover:text-slate-700 px-1 py-1 cursor-pointer"
+                className="text-xs font-semibold text-slate-500 hover:text-slate-700 px-2 py-1.5 cursor-pointer"
               >
                 Clear
               </button>
@@ -581,7 +610,7 @@ export function FilterBar({
                   applyFilters();
                   close();
                 }}
-                className="bg-[#6aa337] text-white text-xs font-bold rounded-full px-3 py-1.5 hover:opacity-90 transition-opacity cursor-pointer"
+                className="bg-[#6aa337] text-white text-xs font-bold rounded-full px-4 py-2 hover:opacity-90 transition-opacity cursor-pointer shadow-sm"
               >
                 Apply
               </button>
@@ -609,7 +638,7 @@ export function FilterBar({
               setMaxVal={setMaxMeal}
               step={5}
             />
-            <div className="flex items-center justify-between border-t border-slate-100 pt-2 mt-1">
+            <div className="flex items-center justify-between border-t border-slate-100 pt-3 mt-1">
               <button
                 type="button"
                 onClick={() => {
@@ -618,7 +647,7 @@ export function FilterBar({
                   applyFilters({ minMealPrice: undefined, maxMealPrice: undefined });
                   close();
                 }}
-                className="text-xs font-semibold text-slate-500 hover:text-slate-700 px-1 py-1 cursor-pointer"
+                className="text-xs font-semibold text-slate-500 hover:text-slate-700 px-2 py-1.5 cursor-pointer"
               >
                 Reset
               </button>
@@ -628,7 +657,7 @@ export function FilterBar({
                   applyFilters();
                   close();
                 }}
-                className="bg-[#6aa337] text-white text-xs font-bold rounded-full px-3 py-1.5 hover:opacity-90 transition-opacity cursor-pointer"
+                className="bg-[#6aa337] text-white text-xs font-bold rounded-full px-4 py-2 hover:opacity-90 transition-opacity cursor-pointer shadow-sm"
               >
                 Apply
               </button>
@@ -656,7 +685,7 @@ export function FilterBar({
               setMaxVal={setMaxMonth}
               step={100}
             />
-            <div className="flex items-center justify-between border-t border-slate-100 pt-2 mt-1">
+            <div className="flex items-center justify-between border-t border-slate-100 pt-3 mt-1">
               <button
                 type="button"
                 onClick={() => {
@@ -665,7 +694,7 @@ export function FilterBar({
                   applyFilters({ minMonthPrice: undefined, maxMonthPrice: undefined });
                   close();
                 }}
-                className="text-xs font-semibold text-slate-500 hover:text-slate-700 px-1 py-1 cursor-pointer"
+                className="text-xs font-semibold text-slate-500 hover:text-slate-700 px-2 py-1.5 cursor-pointer"
               >
                 Reset
               </button>
@@ -675,7 +704,7 @@ export function FilterBar({
                   applyFilters();
                   close();
                 }}
-                className="bg-[#6aa337] text-white text-xs font-bold rounded-full px-3 py-1.5 hover:opacity-90 transition-opacity cursor-pointer"
+                className="bg-[#6aa337] text-white text-xs font-bold rounded-full px-4 py-2 hover:opacity-90 transition-opacity cursor-pointer shadow-sm"
               >
                 Apply
               </button>
@@ -690,7 +719,7 @@ export function FilterBar({
           type="button"
           onClick={clearAllFilters}
           className={cn(
-            "text-xs font-bold text-slate-500 hover:text-slate-800 transition-colors py-2 px-3 cursor-pointer shrink-0 inline-flex items-center gap-1.5 hover:underline w-auto lg:w-full justify-start self-center lg:self-start lg:mt-1 rounded-lg",
+            "text-xs font-bold text-slate-500 hover:text-slate-800 transition-colors py-2 px-3 cursor-pointer shrink-0 inline-flex items-center gap-1.5 hover:underline w-auto lg:w-full justify-start self-center lg:self-start lg:mt-1 rounded-lg whitespace-nowrap",
             FOCUS_RING
           )}
         >

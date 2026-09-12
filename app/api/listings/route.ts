@@ -1,18 +1,29 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { headers } from 'next/headers';
 import { AddListingSchema } from '@/lib/validations';
-import { hashIp, checkAndIncrementRateLimit, RateLimitError } from '@/lib/rateLimit';
+import { getClientIp, hashIp, RateLimiters, checkAndIncrementRateLimit, RateLimitError } from '@/lib/rateLimit';
 import { generateSlug } from '@/lib/slugify';
 import { getPublicUrl } from '@/lib/r2';
 import { prisma } from '@/lib/prisma';
 import { computeSearchPrices } from '@/lib/searchPrices';
 
 export async function POST(req: NextRequest) {
-  // Step 46: Extract and hash the client IP. headers() is async in Next 16.
-  const headersList = await headers();
-  const forwarded = headersList.get('x-forwarded-for');
-  const rawIp = forwarded ? forwarded.split(',')[0].trim() : '0.0.0.0';
+  // Step 46: Extract and hash the client IP using secure helper
+  const rawIp = getClientIp(req.headers);
   const ipHash = hashIp(rawIp);
+
+  // Burst protection check (max 2 submissions per minute per IP)
+  const burstCheck = RateLimiters.listingBurst(ipHash);
+  if (!burstCheck.allowed) {
+    return NextResponse.json(
+      { error: 'Too many submissions in a short period. Please wait a moment.' },
+      {
+        status: 429,
+        headers: {
+          'Retry-After': String(burstCheck.resetInSeconds),
+        },
+      },
+    );
+  }
 
   const body = await req.json();
 

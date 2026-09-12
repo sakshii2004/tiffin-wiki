@@ -8,6 +8,7 @@ import { HeroSearchBar } from '@/components/layout/HeroSearchBar';
 import { HeroPolaroids } from '@/components/ui/HeroPolaroids';
 import { ListingGrid } from '@/components/listing/ListingGrid';
 import { toListingCardProps } from '@/lib/queries';
+import { serializeJsonLd } from '@/lib/jsonLd';
 
 // ISR — Section 5.1
 export const revalidate = 900; // 15 minutes
@@ -61,7 +62,7 @@ export default async function HomePage() {
     <>
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        dangerouslySetInnerHTML={{ __html: serializeJsonLd(jsonLd) }}
       />
       {/* Homepage uses a plain header — the hero owns the only search elements. */}
       <SiteHeader />

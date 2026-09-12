@@ -1,4 +1,4 @@
-import { auth } from '@/lib/auth';
+import { auth, isAdminEmail } from '@/lib/auth';
 import { redirect } from 'next/navigation';
 import type { Metadata } from 'next';
 import Link from 'next/link';
@@ -15,9 +15,10 @@ export default async function AdminLayout({
 }) {
   const session = await auth();
 
-  if (!session?.user?.email || session.user.email !== process.env.ADMIN_EMAIL) {
+  if (!session?.user?.email || !isAdminEmail(session.user.email)) {
     redirect('/');
   }
+
 
   return (
     <div className="min-h-screen bg-[#090d16] text-slate-100 font-sans selection:bg-emerald-500/30 selection:text-emerald-300 antialiased flex flex-col">

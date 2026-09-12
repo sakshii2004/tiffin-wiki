@@ -10,6 +10,7 @@ import { NoListingsFound } from '@/components/search/NoListingsFound';
 import { Pagination } from '@/components/ui/Pagination';
 import { Button } from '@/components/ui/Button';
 import { toTitleCase } from '@/lib/titleCase';
+import { serializeJsonLd } from '@/lib/jsonLd';
 
 // Fully dynamic — query-driven, no ISR.
 export const dynamic = 'force-dynamic';
@@ -39,18 +40,63 @@ const PAGE_SIZE = 20;
 
 
 export async function generateMetadata({ searchParams }: SearchPageProps): Promise<Metadata> {
-  const { city = '', q = '', sort } = await searchParams;
+  const params = await searchParams;
+  const { city = '', q = '' } = params;
   const display = city ? toTitleCase(city) : (q ? `"${q}"` : 'India');
-  const alternatesUrl = new URLSearchParams();
-  if (city) alternatesUrl.set('city', city);
-  if (q) alternatesUrl.set('q', q);
-  if (sort) alternatesUrl.set('sort', sort);
-  const qs = alternatesUrl.toString();
+  
+  // Clean canonical: canonicalize back to the primary city or query route to prevent crawl bloat
+  const canonicalParams = new URLSearchParams();
+  if (city) canonicalParams.set('city', city);
+  else if (q) canonicalParams.set('q', q);
+  const canonicalQs = canonicalParams.toString();
+  const canonicalUrl = `https://tiffin.wiki/search${canonicalQs ? '?' + canonicalQs : ''}`;
+
+  // Check if deep filtering is applied (filters other than city or main query)
+  const hasExtraFilters = Boolean(
+    params.veg ||
+    params.meals ||
+    params.days ||
+    params.containers ||
+    params.spices ||
+    params.minMealPrice ||
+    params.maxMealPrice ||
+    params.minMonthPrice ||
+    params.maxMonthPrice ||
+    params.sort ||
+    params.page,
+  );
+
+  const title = `Tiffin services in ${display} — tiffin.wiki`;
+  const description = `Browse verified home-style tiffin meal services in ${display}. Community-listed, manually verified.`;
+
   return {
-    title: `Tiffin services in ${display} — tiffin.wiki`,
-    description: `Browse verified tiffin meal services in ${display}. Community-listed, manually verified.`,
-    robots: { index: true, follow: true },
-    alternates: { canonical: `https://tiffin.wiki/search${qs ? '?' + qs : ''}` },
+    title,
+    description,
+    robots: {
+      index: !hasExtraFilters, // Index primary city/query landing searches; avoid index bloat on deep permutations
+      follow: true,
+    },
+    openGraph: {
+      title,
+      description,
+      url: canonicalUrl,
+      type: 'website',
+      images: [
+        {
+          url: '/tiffin-wiki-logo.png',
+          width: 1200,
+          height: 630,
+          alt: `Tiffin services in ${display}`,
+        },
+      ],
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title,
+      description,
+      images: ['/tiffin-wiki-logo.png'],
+    },
+    alternates: { canonical: canonicalUrl },
   };
 }
 
@@ -182,7 +228,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
     <>
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        dangerouslySetInnerHTML={{ __html: serializeJsonLd(jsonLd) }}
       />
       <SiteHeader showSearchBar defaultCity={city || undefined} defaultQ={q || undefined} />
       <main id="main-content" className="flex-1">
