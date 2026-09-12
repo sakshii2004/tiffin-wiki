@@ -866,7 +866,7 @@ API routes use cookie-based session authentication (NextAuth). For the admin end
 
 Four instances found, all safe:
 
-1. **JSON-LD Structured Data** (homepage, search, detail pages): Uses `JSON.stringify()` on server-built objects with no user-controlled HTML. `JSON.stringify()` escapes all special characters. ✅
+1. **JSON-LD Structured Data** (homepage, search, detail pages): Uses `serializeJsonLd()` ([`lib/jsonLd.ts`](file:///c:/Users/hp/Desktop/Side%20Quests/tiffin.wiki/tiffin-wiki/lib/jsonLd.ts)) to serialize schema objects. Standard `JSON.stringify()` does not escape `<` or `>` or `/`, which could permit script tag breakout XSS if user-supplied strings (e.g., listing names) contain `</script>`. `serializeJsonLd()` escapes `<` to `\u003c` and HTML-breaking characters, preventing HTML script tag termination while preserving valid JSON for JSON-LD consumers. ✅
 
 2. **PhotosCarousel inline CSS** ([`PhotosCarousel.tsx`](file:///c:/Users/user/Documents/TW/t-w/components/listing/PhotosCarousel.tsx) L109): Static CSS string literal with no dynamic content. ✅
 

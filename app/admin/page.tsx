@@ -205,7 +205,6 @@ export default async function AdminDashboardPage({
         WHERE "createdAt" >= ${dateThreshold}
         GROUP BY 1
         ORDER BY date ASC
-        LIMIT 14
       `,
       prisma.$queryRaw<
         Array<{

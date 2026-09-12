@@ -4,6 +4,7 @@ import { getClientIp, hashIp, RateLimiters } from '@/lib/rateLimit';
 import { TelemetryEventSchema } from '@/lib/validations';
 
 const MAX_BATCH_SIZE = 50;
+const MAX_PAYLOAD_BYTES = 64 * 1024; // 64 KB limit
 
 export async function POST(req: NextRequest) {
   try {
@@ -24,6 +25,12 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    // 1. Fast fail if Content-Length header exceeds limit
+    const contentLength = req.headers.get('content-length');
+    if (contentLength && parseInt(contentLength, 10) > MAX_PAYLOAD_BYTES) {
+      return NextResponse.json({ error: 'Payload too large' }, { status: 413 });
+    }
+
     const country = req.headers.get('x-vercel-ip-country') || req.headers.get('x-geo-country') || undefined;
     const geoCity = req.headers.get('x-vercel-ip-city') || req.headers.get('x-geo-city') || undefined;
 
@@ -36,6 +43,11 @@ export async function POST(req: NextRequest) {
 
     if (!text) {
       return NextResponse.json({ success: true, count: 0 }, { status: 200 });
+    }
+
+    // 2. Guard against missing/chunked Content-Length before JSON parsing
+    if (Buffer.byteLength(text, 'utf8') > MAX_PAYLOAD_BYTES) {
+      return NextResponse.json({ error: 'Payload too large' }, { status: 413 });
     }
 
     let payload: unknown = null;

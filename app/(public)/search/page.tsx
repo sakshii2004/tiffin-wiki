@@ -10,6 +10,7 @@ import { NoListingsFound } from '@/components/search/NoListingsFound';
 import { Pagination } from '@/components/ui/Pagination';
 import { Button } from '@/components/ui/Button';
 import { toTitleCase } from '@/lib/titleCase';
+import { serializeJsonLd } from '@/lib/jsonLd';
 
 // Fully dynamic — query-driven, no ISR.
 export const dynamic = 'force-dynamic';
@@ -227,7 +228,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
     <>
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        dangerouslySetInnerHTML={{ __html: serializeJsonLd(jsonLd) }}
       />
       <SiteHeader showSearchBar defaultCity={city || undefined} defaultQ={q || undefined} />
       <main id="main-content" className="flex-1">

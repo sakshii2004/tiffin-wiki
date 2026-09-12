@@ -34,6 +34,7 @@ export function hashIp(ip: string): string {
  */
 interface RateLimitRecord {
   timestamps: number[];
+  windowMs: number;
 }
 
 const memoryStore = new Map<string, RateLimitRecord>();
@@ -42,12 +43,12 @@ const memoryStore = new Map<string, RateLimitRecord>();
 const CLEANUP_INTERVAL_MS = 5 * 60 * 1000;
 let lastCleanup = Date.now();
 
-function cleanupStaleEntries(now: number, maxWindowMs: number) {
+function cleanupStaleEntries(now: number) {
   if (now - lastCleanup < CLEANUP_INTERVAL_MS) return;
   lastCleanup = now;
 
   for (const [key, record] of memoryStore.entries()) {
-    const freshTimestamps = record.timestamps.filter((ts) => now - ts < maxWindowMs);
+    const freshTimestamps = record.timestamps.filter((ts) => now - ts < record.windowMs);
     if (freshTimestamps.length === 0) {
       memoryStore.delete(key);
     } else {
@@ -71,12 +72,14 @@ export function checkSlidingWindowRateLimit(
   windowMs: number,
 ): RateLimitResult {
   const now = Date.now();
-  cleanupStaleEntries(now, windowMs);
+  cleanupStaleEntries(now);
 
   let record = memoryStore.get(key);
   if (!record) {
-    record = { timestamps: [] };
+    record = { timestamps: [], windowMs };
     memoryStore.set(key, record);
+  } else {
+    record.windowMs = windowMs;
   }
 
   // Remove timestamps outside the sliding window

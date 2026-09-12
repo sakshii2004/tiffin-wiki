@@ -16,6 +16,7 @@ import { PhotosCarousel } from '@/components/listing/PhotosCarousel';
 import { WriteReviewButton } from '@/components/listing/WriteReviewButton';
 import { SearchParamToast } from '@/components/ui/SearchParamToast';
 import { toTitleCase } from '@/lib/titleCase';
+import { serializeJsonLd } from '@/lib/jsonLd';
 import { MapPin } from 'lucide-react';
 
 export async function generateStaticParams() {
@@ -171,7 +172,7 @@ export default async function TiffinDetailPage({ params, searchParams }: DetailP
     <>
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        dangerouslySetInnerHTML={{ __html: serializeJsonLd(jsonLd) }}
       />
       <SiteHeader showSearchBar defaultCity={listing.city} />
       {reviewed === '1' && (
