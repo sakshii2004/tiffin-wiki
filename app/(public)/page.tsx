@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import { TrendingUp, CheckCircle, Plus, Search } from 'lucide-react';
+import { Sparkles, CheckCircle, Plus, Search } from 'lucide-react';
 import { prisma } from '@/lib/prisma';
 import { SiteHeader } from '@/components/layout/SiteHeader';
 import { SiteFooter } from '@/components/layout/SiteFooter';
@@ -44,7 +44,7 @@ const jsonLd = {
 
 
 export default async function HomePage() {
-  const trendingListings = await prisma.tiffinService.findMany({
+  const recentListings = await prisma.tiffinService.findMany({
     where: { status: 'APPROVED' },
     orderBy: { createdAt: 'desc' },
     take: 3,
@@ -56,7 +56,7 @@ export default async function HomePage() {
     },
   });
 
-  const cards = trendingListings.map(toListingCardProps);
+  const cards = recentListings.map(toListingCardProps);
 
   return (
     <>
@@ -99,16 +99,21 @@ export default async function HomePage() {
           </div>
         </section>
 
-        {/* Trending Section */}
+        {/* Recently Added Section */}
         <section className="bg-white py-16 px-6">
           <div className="mx-auto max-w-[1152px]">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-9">
-              <h2 className="text-2xl md:text-[26px] font-bold text-[#0f172a] flex items-center gap-2.5 margin-0">
-                <TrendingUp className="text-[#b85c38]" size={24} />
-                <span>Trending near you</span>
-              </h2>
+              <div>
+                <h2 className="text-2xl md:text-[26px] font-bold text-[#0f172a] flex items-center gap-2.5 margin-0">
+                  <Sparkles className="text-[#b85c38]" size={24} />
+                  <span>Recently added</span>
+                </h2>
+                <p className="text-sm text-[#64748b] mt-1">
+                  Freshly mapped home-cooked meal services discovered by the community.
+                </p>
+              </div>
               <Link 
-                href="/search?sort=popularity" 
+                href="/search?sort=recent" 
                 className="text-[#3d7a2a] hover:text-[#2d5c10] transition-colors font-semibold text-sm flex items-center gap-1 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#3d7a2a]"
               >
                 View all mapped tiffins →
